@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.prm392.foodmap" />
-                  <option name="mobileSdkAppId" value="1:233967102663:android:fbdc4893a367548e432ce2" />
-                  <option name="projectId" value="food-map-app-2025" />
-                  <option name="projectNumber" value="233967102663" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
