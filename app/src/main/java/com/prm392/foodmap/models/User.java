@@ -25,8 +25,8 @@ public class User {
         return Constants.ROLE_ADMIN.equals(role);
     }
 
-    public boolean isRestaurantOwner() {
-        return Constants.ROLE_RESTAURANT_OWNER.equals(role);
+    public boolean isUser() {
+        return Constants.ROLE_USER.equals(role);
     }
 
     public boolean isSystemAdmin() {
