@@ -1,4 +1,4 @@
-package com.prm392.foodmap;
+package com.prm392.foodmap.activities;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
+import com.prm392.foodmap.R;
 
 public class MainActivity extends AppCompatActivity {
 

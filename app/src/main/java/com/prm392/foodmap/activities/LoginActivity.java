@@ -1,4 +1,4 @@
-package com.prm392.foodmap;
+package com.prm392.foodmap.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,6 +14,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.prm392.foodmap.R;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -25,11 +26,11 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(com.prm392.foodmap.R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
 
-        btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn);
+        btnGoogleSignIn = findViewById(com.prm392.foodmap.R.id.btnGoogleSignIn);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
