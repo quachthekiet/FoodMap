@@ -35,6 +35,8 @@ public class ImageSliderAdapter extends RecyclerView.Adapter<ImageSliderAdapter.
         String url = imageUrls.get(position);
         Glide.with(context)
                 .load(url)
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.error_image)
                 .into(holder.imageView);
     }
 

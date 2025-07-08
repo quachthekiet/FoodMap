@@ -1,6 +1,7 @@
-package com.prm392.foodmap;
+package com.prm392.foodmap.activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +16,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.prm392.foodmap.R;
 import com.prm392.foodmap.adapters.ImageSliderAdapter;
 import com.prm392.foodmap.adapters.ReviewAdapter;
 import com.prm392.foodmap.models.Review;
@@ -121,22 +123,23 @@ public class RestaurantActivity extends AppCompatActivity {
     }
 
     private void loadReviews() {
-        DatabaseReference reviewsRef = FirebaseDatabase.getInstance().getReference("reviews");
+        DatabaseReference reviewsRef = FirebaseDatabase.getInstance()
+                .getReference("reviews")
+                .child(restaurantId);
 
         reviewsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 reviewList.clear();
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    String resId = child.child("restaurant_id").getValue(String.class);
-                    if (restaurantId.equals(resId)) {
-                        Integer rating = child.child("rating").getValue(Integer.class);
-                        String comment = child.child("comment").getValue(String.class);
-                        Long timestamp = child.child("timestamp").getValue(Long.class);
+                for (DataSnapshot deviceSnapshot : snapshot.getChildren()) {
+                    Integer rating = deviceSnapshot.child("rating").getValue(Integer.class);
+                    String comment = deviceSnapshot.child("comment").getValue(String.class);
+                    Long timestamp = deviceSnapshot.child("timestamp").getValue(Long.class);
 
-                        if (rating != null && comment != null && timestamp != null) {
-                            reviewList.add(new Review(rating, comment, timestamp));
-                        }
+                    if (rating != null && comment != null && timestamp != null) {
+                        reviewList.add(new Review(rating, comment, timestamp));
+                    } else {
+                        Log.e("REVIEW_LOAD", "Review missing field at deviceId: " + deviceSnapshot.getKey());
                     }
                 }
                 reviewAdapter.notifyDataSetChanged();
@@ -148,4 +151,5 @@ public class RestaurantActivity extends AppCompatActivity {
             }
         });
     }
+
 }

@@ -44,6 +44,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".activities.RestaurantActivity"
+            android:exported="true">
+        </activity>
+
     </application>
 
 </manifest>
