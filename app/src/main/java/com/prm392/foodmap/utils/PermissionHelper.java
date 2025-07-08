@@ -4,7 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-
+import com.prm392.foodmap.models.User;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -30,5 +30,8 @@ public class PermissionHelper {
         return requestCode == REQUEST_LOCATION_PERMISSION &&
                 grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED;
+    }
+    public static boolean isAdmin(User user) {
+        return user != null && "admin".equals(user.getRole());
     }
 }
