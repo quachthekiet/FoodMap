@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "233967102663",
+    "firebase_url": "https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "food-map-app-2025",
+    "storage_bucket": "food-map-app-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:233967102663:android:fbdc4893a367548e432ce2",
+        "android_client_info": {
+          "package_name": "com.prm392.foodmap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdZaE0duz9_Q6yhUMUczBhLuXyLI4Kbr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
