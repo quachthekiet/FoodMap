@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
 
     <application
         android:allowBackup="true"
@@ -15,10 +18,7 @@
         android:theme="@style/Theme.FoodMap"
         tools:targetApi="31">
 
-        <!-- Đăng ký API Key cho Google Maps -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCgFsDqeJK6hefrYYX9L3lUTTTH6B8LKfw" />
+
 
         <activity
             android:name=".activities.MainActivity"
@@ -34,7 +34,15 @@
             </intent-filter>
         </activity>
 
-        <!-- Màn hình khởi động (Login) -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/api_key" />
+
+        <activity
+            android:name=".activities.HomeActivity"
+            android:exported="true">
+        </activity>
+
         <activity
             android:name=".activities.LoginActivity"
             android:exported="true">
