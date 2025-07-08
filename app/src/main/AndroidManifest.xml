@@ -12,6 +12,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodMap"
         tools:targetApi="31">
+
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBrMID0WLFbMNy02xzxTqZkIfpZUTCfU7g" />
+
+        <activity
+            android:name=".activities.HomeActivity"
+            android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
