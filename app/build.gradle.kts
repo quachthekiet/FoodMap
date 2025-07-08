@@ -45,6 +45,8 @@ dependencies {
 
     implementation("com.cloudinary:cloudinary-android:3.0.2")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation ("me.relex:circleindicator:2.1.6")
+
 
     implementation("com.google.android.libraries.places:places:4.3.1")
 
