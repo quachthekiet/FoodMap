@@ -1,30 +1,63 @@
 package com.prm392.foodmap.fragments;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.IntentSender;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.Task;
 import com.prm392.foodmap.R;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 
 public class MapsFragment extends Fragment {
 
-    private OnMapReadyCallback callback = new OnMapReadyCallback() {
+    private FloatingActionButton btnMyLocation;
+    private boolean isGPSDialogShown = false;
+    private boolean userDeniedGPS = false;
+    private GoogleMap googleMap;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+    private static final int REQUEST_CHECK_SETTINGS = 1002;
+
+    private FusedLocationProviderClient fusedLocationClient;
+
+    private final OnMapReadyCallback callback = new OnMapReadyCallback() {
         @Override
-        public void onMapReady(GoogleMap googleMap) {
-            LatLng sydney = new LatLng(-34, 151);
-            googleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        public void onMapReady(GoogleMap gMap) {
+            googleMap = gMap;
+
+            // ❌ Tắt nút định vị mặc định
+            googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
+
+            requestLocationPermission();
         }
     };
 
@@ -39,10 +72,155 @@ public class MapsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+
         if (mapFragment != null) {
             mapFragment.getMapAsync(callback);
+        }
+        btnMyLocation = view.findViewById(R.id.btnMyLocation);
+        btnMyLocation.setOnClickListener(v -> {
+            isGPSDialogShown = false; // ✅ Reset flag
+            requestLocationPermission(); // Tiếp tục check GPS và quyền
+        });
+
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Nếu map đã sẵn sàng, kiểm tra lại quyền + GPS
+        if (googleMap != null) {
+            requestLocationPermission();
+        }
+    }
+
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(),
+                    new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    },
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            checkGPSAndEnableLocation();
+        }
+    }
+
+    private void enableUserLocation() {
+        try {
+            if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                googleMap.setMyLocationEnabled(true);
+                getDeviceLocation();
+            }
+        } catch (SecurityException e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), "Không thể bật hiển thị vị trí người dùng", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @RequiresPermission(allOf = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION})
+    private void getDeviceLocation() {
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+                LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                moveCamera(currentLatLng);
+            } else {
+                // Nếu không lấy được last location, dùng current location
+                fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
+                        .addOnSuccessListener(newLocation -> {
+                            if (newLocation != null) {
+                                LatLng currentLatLng = new LatLng(newLocation.getLatitude(), newLocation.getLongitude());
+                                moveCamera(currentLatLng);
+                            } else {
+                                Toast.makeText(getContext(), "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        });
+    }
+
+    private void checkGPSAndEnableLocation() {
+        LocationRequest locationRequest = LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(10000)
+                .setFastestInterval(5000);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest)
+                .setAlwaysShow(true);
+
+        SettingsClient client = LocationServices.getSettingsClient(requireActivity());
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+
+        task.addOnSuccessListener(locationSettingsResponse -> {
+            isGPSDialogShown = false;
+            userDeniedGPS = false; // ✅ nếu đã bật GPS → reset lại flag
+            enableUserLocation();
+        });
+
+        task.addOnFailureListener(e -> {
+            if (e instanceof ResolvableApiException && !isGPSDialogShown) {
+                try {
+                    isGPSDialogShown = true;
+                    userDeniedGPS = false; // sẽ reset nếu đồng ý
+                    ResolvableApiException resolvable = (ResolvableApiException) e;
+                    resolvable.startResolutionForResult(requireActivity(), REQUEST_CHECK_SETTINGS);
+                } catch (IntentSender.SendIntentException sendEx) {
+                    sendEx.printStackTrace();
+                }
+            } else {
+                if (!userDeniedGPS) {
+                    Toast.makeText(getContext(), "Không thể bật GPS", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+
+
+    public void moveCamera(LatLng latLng) {
+        if (googleMap != null) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
+        } else {
+            Toast.makeText(getContext(), "Bản đồ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Khi người dùng bật/tắt GPS từ dialog
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            isGPSDialogShown = false; // ✅ Luôn reset sau khi dialog đóng
+            if (resultCode == Activity.RESULT_OK) {
+                enableUserLocation();
+            } else {
+                Toast.makeText(getContext(), "GPS chưa được bật", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+
+
+    // Xử lý kết quả cấp quyền từ requestPermission()
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                checkGPSAndEnableLocation();
+            } else {
+                Toast.makeText(getContext(), "Bạn cần cấp quyền vị trí để sử dụng chức năng này", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

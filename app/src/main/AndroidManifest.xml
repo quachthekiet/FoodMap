@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -43,7 +44,15 @@
             </intent-filter>
         </activity>
 
-        <!-- Màn hình khởi động (Login) -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/api_key" />
+
+        <activity
+            android:name=".activities.HomeActivity"
+            android:exported="true">
+        </activity>
+
         <activity
             android:name=".activities.LoginActivity"
             android:exported="true">

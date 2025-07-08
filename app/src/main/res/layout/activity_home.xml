@@ -7,18 +7,14 @@
     android:layout_height="match_parent"
     tools:context=".activities.HomeActivity">
 
-
-
-
     <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/fragmentContainerView"
+        android:id="@+id/h_fragmentContainerView"
         android:name="com.prm392.foodmap.fragments.MapsFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent" />
 
     <LinearLayout
-        android:id="@+id/searchBar"
+        android:id="@+id/h_searchBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -38,7 +34,7 @@
             android:src="@drawable/ic_search" />
 
         <EditText
-            android:id="@+id/edtSearch"
+            android:id="@+id/h_edtSearch"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
@@ -48,11 +44,11 @@
             android:inputType="text"
             android:textColor="#000"
             android:textSize="16sp"
-            android:padding="0dp"/>
+            android:padding="0dp" />
     </LinearLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigationView"
+        android:id="@+id/h_bottomNavigationView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
