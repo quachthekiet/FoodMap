@@ -5,19 +5,20 @@ public class User {
     public String name;
     public String role;
     public long createdAt;
+    public boolean isManuallyVerified;
 
-    // Transient field
     public transient String uid;
 
-    // Constructor không tham số - BẮT BUỘC cho Firebase
+    // Constructor mặc định (bắt buộc)
     public User() {}
 
-    // Constructor với tham số
+    // Constructor có tham số
     public User(String email, String name, String role) {
         this.email = email;
         this.name = name;
         this.role = role;
         this.createdAt = System.currentTimeMillis();
+        this.isManuallyVerified = false;
     }
 
     // Helper methods để kiểm tra role
@@ -25,7 +26,7 @@ public class User {
         return Constants.ROLE_ADMIN.equals(role);
     }
 
-    public boolean isRestaurantOwner() {
+    public boolean isUser() {
         return Constants.ROLE_RESTAURANT_OWNER.equals(role);
     }
 
@@ -39,5 +40,9 @@ public class User {
 
     public String getUid() {
         return uid;
+    }
+
+    public String getRole() {
+        return role;
     }
 }
