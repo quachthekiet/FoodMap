@@ -13,7 +13,20 @@
           "package_name": "com.prm392.foodmap"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "233967102663-fgt7jl4o4mm121a47m9bgfdinpvjls7s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.prm392.foodmap",
+            "certificate_hash": "b6c941e178c3689ead680f4b54dff0a7b16c5b3e"
+          }
+        },
+        {
+          "client_id": "233967102663-uqfbga1tokbmdo0jgme3rvvs18c9ip6m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDdZaE0duz9_Q6yhUMUczBhLuXyLI4Kbr8"
@@ -21,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "233967102663-uqfbga1tokbmdo0jgme3rvvs18c9ip6m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
