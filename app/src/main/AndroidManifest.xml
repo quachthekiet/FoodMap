@@ -22,11 +22,11 @@
 
         <!-- Màn hình xác thực -->
         <activity
-            android:name=".VerifyEmailActivity"
+            android:name=".activities.VerifyEmailActivity"
             android:exported="true" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
@@ -41,7 +41,7 @@
 
         <!-- Màn hình khởi động (Login) -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
