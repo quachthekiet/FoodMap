@@ -66,51 +66,10 @@ public class LoginActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
-                        boolean isNewUser = false;
-                        if (task.getResult() != null && task.getResult().getAdditionalUserInfo() != null) {
-                            isNewUser = task.getResult().getAdditionalUserInfo().isNewUser();
-                        }
 
                         if (user != null) {
-                            if (!user.isEmailVerified()) {
-                                // ✅ Gửi email xác thực nếu chưa xác thực, bất kể là user mới hay cũ
-                                ActionCodeSettings actionCodeSettings = ActionCodeSettings.newBuilder()
-                                        .setUrl("https://prm392.page.link/EmailVerificationLink")
-                                        .setHandleCodeInApp(true)
-                                        .setAndroidPackageName("com.prm392.foodmap", true, null)
-                                        .build();
-
-                                user.sendEmailVerification(actionCodeSettings).addOnCompleteListener(verifyTask -> {
-                                    if (verifyTask.isSuccessful()) {
-                                        FirebaseDatabase.getInstance().getReference("users")
-                                                .child(user.getUid())
-                                                .child("isManuallyVerified")
-                                                .setValue(false)
-                                                .addOnSuccessListener(aVoid -> {
-                                                    Toast.makeText(this, "Đã gửi email xác thực.", Toast.LENGTH_SHORT).show();
-                                                    startActivity(new Intent(this, VerifyEmailActivity.class));
-                                                    finish();
-                                                });
-                                    } else {
-                                        Toast.makeText(this, "Gửi email xác thực thất bại: " + verifyTask.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                });
-                            } else {
-                                // ✅ Email đã xác thực → kiểm tra trong DB
-                                DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users")
-                                        .child(user.getUid())
-                                        .child("isManuallyVerified");
-
-                                ref.get().addOnSuccessListener(snapshot -> {
-                                    Boolean isVerified = snapshot.getValue(Boolean.class);
-                                    if (Boolean.TRUE.equals(isVerified)) {
-                                        goToMain();
-                                    } else {
-                                        startActivity(new Intent(this, VerifyEmailActivity.class));
-                                        finish();
-                                    }
-                                });
-                            }
+                            // Bỏ qua kiểm tra xác thực email, đăng nhập thành công luôn
+                            goToMain();
                         }
                     } else {
                         Toast.makeText(this, "Đăng nhập thất bại.", Toast.LENGTH_SHORT).show();
