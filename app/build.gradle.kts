@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
@@ -42,6 +43,8 @@ dependencies {
     implementation ("androidx.credentials:credentials-play-services-auth:1.3.0")
     implementation ("com.cloudinary:cloudinary-android:3.0.2")
     implementation ("com.github.bumptech.glide:glide:4.16.0")
+
+    implementation("com.google.android.libraries.places:places:4.3.1")
 
     implementation(libs.appcompat)
     implementation(libs.material)

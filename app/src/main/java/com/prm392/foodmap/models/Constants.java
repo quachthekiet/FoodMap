@@ -8,7 +8,7 @@ public class Constants {
 
     // User roles
     public static final String ROLE_SYSTEM_ADMIN = "system_admin";
-    public static final String ROLE_RESTAURANT_OWNER = "restaurant_owner";
+    public static final String ROLE_USER = "user";
     public static final String ROLE_ADMIN = "admin";
 
     // Review constraints
