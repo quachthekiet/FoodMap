@@ -34,19 +34,15 @@ android {
 }
 
 dependencies {
-
-    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
-
+    implementation (platform("com.google.firebase:firebase-bom:33.16.0"))
     implementation ("com.google.firebase:firebase-auth")
     implementation ("com.google.firebase:firebase-database")
-
-    implementation("androidx.credentials:credentials:1.3.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-
-    implementation("com.cloudinary:cloudinary-android:3.0.2")
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    implementation ("me.relex:circleindicator:2.1.6")
-
+    implementation ("com.google.android.gms:play-services-auth:20.7.0")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("androidx.credentials:credentials:1.3.0")
+    implementation ("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation ("com.cloudinary:cloudinary-android:3.0.2")
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
 
     implementation("com.google.android.libraries.places:places:4.3.1")
 
