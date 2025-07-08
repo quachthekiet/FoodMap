@@ -1,6 +1,5 @@
-package com.prm392.foodmap;
+package com.prm392.foodmap.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -9,6 +8,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.prm392.foodmap.R;
 
 public class VerifyEmailActivity extends AppCompatActivity {
 
