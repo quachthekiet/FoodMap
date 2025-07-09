@@ -29,10 +29,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Đã đăng nhập, bỏ qua xác thực email, ở lại MainActivity
             // Bạn có thể load dữ liệu hoặc UI ở đây
-            Intent intent = new Intent(this, RestaurantActivity.class);
-            intent.putExtra("RESTAURANT_ID", "restaurant001");
-            startActivity(intent);
-            finish();
 
         }
     }
