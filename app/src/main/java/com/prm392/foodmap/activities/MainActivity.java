@@ -2,6 +2,7 @@ package com.prm392.foodmap.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -29,6 +30,11 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Đã đăng nhập, bỏ qua xác thực email, ở lại MainActivity
             // Bạn có thể load dữ liệu hoặc UI ở đây
+            Button btnOpenAdd = findViewById(R.id.btnSettings);
+            btnOpenAdd.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, AddRestaurantActivity.class);
+                startActivity(intent);
+            });
         }
     }
 }

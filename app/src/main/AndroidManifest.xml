@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -18,29 +17,27 @@
         android:theme="@style/Theme.FoodMap"
         tools:targetApi="31">
         <activity
+            android:name=".activities.ImagePreviewActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.LocationPickerActivity"
             android:exported="true" />
         <activity
             android:name=".activities.AddRestaurantActivity"
-            android:exported="true" >
-        </activity>
-        <!-- Đăng ký API Key cho Google Maps -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCgFsDqeJK6hefrYYX9L3lUTTTH6B8LKfw" />
-
+            android:exported="true"></activity>
         <activity
             android:name=".activities.MainActivity"
             android:exported="true">
-
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
-                    android:scheme="https"
                     android:host="prm392.page.link"
-                    android:pathPrefix="/" />
+                    android:pathPrefix="/"
+                    android:scheme="https" />
             </intent-filter>
         </activity>
 
@@ -50,18 +47,16 @@
 
         <activity
             android:name=".activities.HomeActivity"
-            android:exported="true">
-        </activity>
-
+            android:exported="true"></activity>
         <activity
             android:name=".activities.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

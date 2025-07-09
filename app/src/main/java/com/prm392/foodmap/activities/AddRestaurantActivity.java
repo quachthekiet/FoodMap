@@ -3,9 +3,11 @@ package com.prm392.foodmap.activities;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -17,7 +19,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.cloudinary.android.MediaManager;
+import com.cloudinary.android.callback.ErrorInfo;
+import com.cloudinary.android.callback.UploadCallback;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -30,27 +38,37 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.adapters.ImageGalleryAdapter;
+import com.prm392.foodmap.config.CloudinaryConfig;
+import com.prm392.foodmap.utils.LocationHelper;
 import com.prm392.foodmap.utils.ValidationHelper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class AddRestaurantActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class AddRestaurantActivity extends AppCompatActivity implements OnMapReadyCallback, ImageGalleryAdapter.OnImageRemoveListener  {
     private TextInputEditText etName, etAddress, etPhone;
-    private Button btnSelectLocation, btnSubmit;
+    private Button btnSelectLocation, btnSubmit,btnAddImage;
+    private RecyclerView rvImages;
     private GoogleMap mapPreview;
     private LatLng selectedLatLng;
+    private ImageGalleryAdapter imageGalleryAdapter;
+    private final List<String> imageUrls = new ArrayList<>();
 
     private static final int LOCATION_PICKER_REQUEST = 1001;
+    private static final int IMAGE_PICKER_REQUEST_CODE = 1002;
     public void bindingView(){
         etName = findViewById(R.id.addRes_etName);
         etAddress = findViewById(R.id.addRes_etAddress);
         etPhone = findViewById(R.id.addRes_etPhone);
         btnSelectLocation = findViewById(R.id.addRes_btnSelectLocation);
         btnSubmit = findViewById(R.id.addRes_btnSubmit);
+        btnAddImage = findViewById(R.id.addRes_btnAddImage);
+        rvImages = findViewById(R.id.addRes_rvImages);
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.addRes_mapPreview);
         if (mapFragment != null) {
@@ -60,6 +78,7 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
     public void bindingAction(){
         btnSelectLocation.setOnClickListener(this::onBtnSelectLocationClick);
         btnSubmit.setOnClickListener(this::onBtnSubmitClick);
+        btnAddImage.setOnClickListener(v -> openImagePicker());
 
         TextWatcher watcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -69,6 +88,21 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
 
         etName.addTextChangedListener(watcher);
         etPhone.addTextChangedListener(watcher);
+        setupRecyclerView();
+    }
+
+    private void setupRecyclerView() {
+        imageGalleryAdapter = new ImageGalleryAdapter(imageUrls, this);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 10, RecyclerView.VERTICAL, false);
+        rvImages.setLayoutManager(gridLayoutManager);
+        rvImages.setAdapter(imageGalleryAdapter);
+    }
+
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        startActivityForResult(Intent.createChooser(intent, "Chọn ảnh"), IMAGE_PICKER_REQUEST_CODE);
     }
 
 
@@ -81,26 +115,48 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
                 phone,
                 selectedLatLng != null ? selectedLatLng.latitude : null,
                 selectedLatLng != null ? selectedLatLng.longitude : null
-        );
+        ) && !imageUrls.isEmpty();
 
         btnSubmit.setEnabled(valid);
     }
 
     private void onBtnSubmitClick(View view) {
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        /*if (currentUser == null) {
+        if (!LocationHelper.canUserPinLocation()) {
             Toast.makeText(this, "Vui lòng đăng nhập để gửi yêu cầu", Toast.LENGTH_LONG).show();
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             return;
-        }*/
+        }
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         String uid = currentUser.getUid();
+        if (currentUser != null) {
+
+            DatabaseReference userRef = FirebaseDatabase.getInstance()
+                    .getReference("users").child(uid);
+
+            userRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    if (task.getResult().exists()) {
+                        Log.d("USER_DATA", "User data: " + task.getResult().getValue());
+                    } else {
+                        Log.d("USER_DATA", "User not found in database.");
+                    }
+                } else {
+                    Log.e("USER_DATA", "Error getting user data", task.getException());
+                }
+            });
+        } else {
+            Log.d("USER_DATA", "No user is logged in.");
+        }
 
         String name = etName.getText().toString().trim();
         String phone = etPhone.getText().toString().trim();
         String address = etAddress.getText().toString().trim();
 
         Map<String, String> images = new HashMap<>();
+        for (int i = 0; i < imageUrls.size(); i++) {
+            images.put("img" + i, imageUrls.get(i));
+        }
         Map<String, String> menuImages = new HashMap<>();
 
         Map<String, Object> restaurantData = new HashMap<>();
@@ -112,7 +168,7 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
         restaurantData.put("ownerUid", uid);
         restaurantData.put("images", images);
         restaurantData.put("menuImages", menuImages);
-        restaurantData.put("isVisible", true);
+        restaurantData.put("isVisible", false);
 
         long now = System.currentTimeMillis();
         restaurantData.put("createdAt", now);
@@ -153,6 +209,7 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        CloudinaryConfig.setupCloudinary(this);
         bindingView();
         bindingAction();
     }
@@ -181,6 +238,63 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
                 mapPreview.moveCamera(CameraUpdateFactory.newLatLngZoom(selectedLatLng, 15));
             }
 
+            validateForm();
+        }
+        if (requestCode == IMAGE_PICKER_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            if (data.getClipData() != null) {
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    Uri imageUri = data.getClipData().getItemAt(i).getUri();
+                    uploadImage(imageUri);
+                }
+            } else if (data.getData() != null) {
+                Uri imageUri = data.getData();
+                uploadImage(imageUri);
+            }
+        }
+    }
+
+    private void uploadImage(Uri imageUri) {
+        Map<String, Object> options = new HashMap<>();
+        options.put("upload_preset", "foodmap_preset");
+
+        MediaManager.get().upload(imageUri)
+                .option("folder", "restaurant_images")
+                .callback(new UploadCallback() {
+                    @Override
+                    public void onStart(String requestId) {}
+
+                    @Override
+                    public void onProgress(String requestId, long bytes, long totalBytes) {}
+
+                    @Override
+                    public void onSuccess(String requestId, Map resultData) {
+                        String imageUrl = resultData.get("secure_url").toString();
+                        runOnUiThread(() -> {
+                            imageUrls.add(imageUrl);
+                            imageGalleryAdapter.notifyItemInserted(imageUrls.size() - 1);
+                            validateForm();
+                        });
+                    }
+
+                    @Override
+                    public void onError(String requestId, ErrorInfo error) {
+                        runOnUiThread(() ->
+                                Toast.makeText(AddRestaurantActivity.this,
+                                        "Upload ảnh thất bại: " + error.getDescription(),
+                                        Toast.LENGTH_SHORT).show());
+                    }
+
+                    @Override
+                    public void onReschedule(String requestId, ErrorInfo error) {}
+                }).dispatch();
+    }
+
+    @Override
+    public void onImageRemove(int position) {
+        if (position >= 0 && position < imageUrls.size()) {
+            imageUrls.remove(position);
+            imageGalleryAdapter.notifyItemRemoved(position);
             validateForm();
         }
     }

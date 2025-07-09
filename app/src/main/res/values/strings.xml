@@ -6,5 +6,6 @@
     <string name="default_web_client_id">233967102663-uqfbga1tokbmdo0jgme3rvvs18c9ip6m.apps.googleusercontent.com</string>
 
     <string name="api_key">AIzaSyBrMID0WLFbMNy02xzxTqZkIfpZUTCfU7g</string>
+    <string name="cloudinary_api_secret">sIFCuyiu8ihgRKU5RuLevdytFW8</string>
 
 </resources>
