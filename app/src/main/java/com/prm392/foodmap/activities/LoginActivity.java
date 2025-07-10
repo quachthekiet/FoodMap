@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -12,9 +13,13 @@ import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.models.User;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -26,11 +31,11 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(com.prm392.foodmap.R.layout.activity_login);
+        setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
 
-        btnGoogleSignIn = findViewById(com.prm392.foodmap.R.id.btnGoogleSignIn);
+        btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn);
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -43,6 +48,15 @@ public class LoginActivity extends AppCompatActivity {
             Intent signInIntent = mGoogleSignInClient.getSignInIntent();
             startActivityForResult(signInIntent, RC_SIGN_IN);
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            goToMain();
+        }
     }
 
     @Override
@@ -65,11 +79,36 @@ public class LoginActivity extends AppCompatActivity {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser();
+                        FirebaseUser firebaseUser = mAuth.getCurrentUser();
+                        if (firebaseUser != null) {
+                            DatabaseReference userRef = FirebaseDatabase.getInstance()
+                                    .getReference("users")
+                                    .child(firebaseUser.getUid());
 
-                        if (user != null) {
-                            // Bỏ qua kiểm tra xác thực email, đăng nhập thành công luôn
-                            goToMain();
+                            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    if (!snapshot.exists()) {
+                                        User newUser = new User(
+                                                firebaseUser.getEmail(),
+                                                firebaseUser.getDisplayName(),
+                                                "USER"
+                                        );
+                                        userRef.setValue(newUser)
+                                                .addOnSuccessListener(aVoid -> goToMain())
+                                                .addOnFailureListener(e ->
+                                                        Toast.makeText(LoginActivity.this, "Lưu dữ liệu thất bại", Toast.LENGTH_SHORT).show()
+                                                );
+                                    } else {
+                                        goToMain();
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    Toast.makeText(LoginActivity.this, "Lỗi truy vấn dữ liệu", Toast.LENGTH_SHORT).show();
+                                }
+                            });
                         }
                     } else {
                         Toast.makeText(this, "Đăng nhập thất bại.", Toast.LENGTH_SHORT).show();
@@ -78,8 +117,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void goToMain() {
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        startActivity(intent);
+        Intent intent = new Intent();
+        setResult(RESULT_OK, intent);
         finish();
     }
 }
