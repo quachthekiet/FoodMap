@@ -52,6 +52,7 @@ public class MapsFragment extends Fragment {
     private FloatingActionButton btnMyLocation;
     private boolean isGPSDialogShown = false;
     private boolean userDeniedGPS = false;
+    private boolean shouldUpdateCameraFromGPS = false;
     private GoogleMap googleMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int REQUEST_CHECK_SETTINGS = 1002;
@@ -97,6 +98,7 @@ public class MapsFragment extends Fragment {
         btnMyLocation = view.findViewById(R.id.btnMyLocation);
         btnMyLocation.setOnClickListener(v -> {
             isGPSDialogShown = false; // ✅ Reset flag
+            shouldUpdateCameraFromGPS = true;
             requestLocationPermission(); // Tiếp tục check GPS và quyền
         });
 
@@ -187,14 +189,20 @@ public class MapsFragment extends Fragment {
             if (location != null) {
                 LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
                 LocationUtil.saveLocation(requireContext(), currentLatLng.latitude, currentLatLng.longitude);
-                moveCamera(currentLatLng);
+                if (shouldUpdateCameraFromGPS) {
+                    moveCamera(currentLatLng); // ✅ chỉ move khi có cờ
+                    shouldUpdateCameraFromGPS = false; // reset
+                }
             } else {
                 // Nếu không lấy được last location, dùng current location
                 fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
                         .addOnSuccessListener(newLocation -> {
                             if (newLocation != null) {
                                 LatLng currentLatLng = new LatLng(newLocation.getLatitude(), newLocation.getLongitude());
-                                moveCamera(currentLatLng);
+                                if (shouldUpdateCameraFromGPS) {
+                                    moveCamera(currentLatLng);
+                                    shouldUpdateCameraFromGPS = false;
+                                }
                             } else {
                                 Toast.makeText(getContext(), "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show();
                             }
