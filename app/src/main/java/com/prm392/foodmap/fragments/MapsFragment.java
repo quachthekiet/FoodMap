@@ -66,9 +66,12 @@ public class MapsFragment extends Fragment {
             googleMap.getUiSettings().setMyLocationButtonEnabled(false);
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
-
-            requestLocationPermission();
+            LatLng cached = LocationUtil.getSavedLocation(requireContext());
+            if(cached != null) {
+                moveCamera(cached,13f);
+            }
             loadRestaurantMarkers();
+            requestLocationPermission();
 
         }
     };
@@ -233,10 +236,7 @@ public class MapsFragment extends Fragment {
 //                if (!userDeniedGPS) {
 //                    Toast.makeText(getContext(), "Không thể bật GPS", Toast.LENGTH_SHORT).show();
 //                }
-                LatLng cached = LocationUtil.getSavedLocation(requireContext());
-                if(cached != null) {
-                    moveCamera(cached,13f);
-                }
+
             }
         });
     }
