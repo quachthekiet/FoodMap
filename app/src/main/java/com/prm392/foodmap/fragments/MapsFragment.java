@@ -44,6 +44,7 @@ import com.prm392.foodmap.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.prm392.foodmap.activities.RestaurantActivity;
 import com.prm392.foodmap.models.Restaurant;
+import com.prm392.foodmap.utils.LocationUtil;
 
 
 public class MapsFragment extends Fragment {
@@ -182,6 +183,7 @@ public class MapsFragment extends Fragment {
         fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
                 LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                LocationUtil.saveLocation(requireContext(), currentLatLng.latitude, currentLatLng.longitude);
                 moveCamera(currentLatLng);
             } else {
                 // Nếu không lấy được last location, dùng current location
@@ -228,18 +230,30 @@ public class MapsFragment extends Fragment {
                     sendEx.printStackTrace();
                 }
             } else {
-                if (!userDeniedGPS) {
-                    Toast.makeText(getContext(), "Không thể bật GPS", Toast.LENGTH_SHORT).show();
+//                if (!userDeniedGPS) {
+//                    Toast.makeText(getContext(), "Không thể bật GPS", Toast.LENGTH_SHORT).show();
+//                }
+                LatLng cached = LocationUtil.getSavedLocation(requireContext());
+                if(cached != null) {
+                    moveCamera(cached,13f);
                 }
             }
         });
+    }
+
+    public void moveCamera(LatLng latLng, float zoom) {
+        if (googleMap != null) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        } else {
+            Toast.makeText(getContext(), "Bản đồ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
 
     public void moveCamera(LatLng latLng) {
         if (googleMap != null) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14f));
         } else {
             Toast.makeText(getContext(), "Bản đồ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
         }
