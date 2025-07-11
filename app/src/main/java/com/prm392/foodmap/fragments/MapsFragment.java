@@ -42,6 +42,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.prm392.foodmap.activities.RestaurantActivity;
 import com.prm392.foodmap.models.Restaurant;
 
 
@@ -134,9 +135,9 @@ public class MapsFragment extends Fragment {
                 googleMap.setOnMarkerClickListener(marker -> {
                     String resId = (String) marker.getTag();
                     if (resId != null) {
-//                        Intent intent = new Intent(getContext(), RestaurantDetailActivity.class);
-//                        intent.putExtra("restaurantId", resId);
-//                        startActivity(intent);
+                        Intent intent = new Intent(getContext(), RestaurantActivity.class);
+                        intent.putExtra("RESTAURANT_ID", resId);
+                        startActivity(intent);
                     }
                     return false;
                 });
