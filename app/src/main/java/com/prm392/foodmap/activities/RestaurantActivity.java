@@ -177,7 +177,7 @@ public class RestaurantActivity extends AppCompatActivity {
         saveReviewToFirebase(rating, comment);
 
         edtReview.setText("");
-        ratingBarInput.setRating(0);
+        ratingBarInput.setRating(5);
     }
 
     private void saveReviewToFirebase(int rating, String comment) {
@@ -202,7 +202,7 @@ public class RestaurantActivity extends AppCompatActivity {
                         loadReviewsAndScrollToBottom();
 
                     } else {
-                        Toast.makeText(this, "Lỗi khi gửi review", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Không thể review!", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
