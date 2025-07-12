@@ -46,6 +46,9 @@ import com.prm392.foodmap.activities.RestaurantActivity;
 import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class MapsFragment extends Fragment {
 
@@ -54,6 +57,8 @@ public class MapsFragment extends Fragment {
     private boolean userDeniedGPS = false;
     private boolean shouldUpdateCameraFromGPS = false;
     private GoogleMap googleMap;
+    private final Map<String, Marker> markerMap = new HashMap<>();
+
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int REQUEST_CHECK_SETTINGS = 1002;
 
@@ -134,6 +139,7 @@ public class MapsFragment extends Fragment {
                                 .title(restaurant.name));
 
                         marker.setTag(restaurant.getKey());
+                        markerMap.put(restaurant.getKey(), marker);
                     }
                 }
 
@@ -155,6 +161,16 @@ public class MapsFragment extends Fragment {
 
             }
         });
+    }
+
+    public void moveCamera(String restaurantId) {
+        if(googleMap != null) {
+            Marker marker = markerMap.get(restaurantId);
+            if (marker != null) {
+                moveCamera(marker.getPosition(), 16f);
+                marker.showInfoWindow();
+            }
+        }
     }
 
     private void requestLocationPermission() {
