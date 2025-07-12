@@ -17,14 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -36,41 +29,31 @@ import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class NearbyListActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class NearbyListActivity extends AppCompatActivity {
 
-    private static final String TAG = "NearbyListActivity";
     private RecyclerView recyclerNearby;
     private Spinner spinnerRadius;
     private RestaurantAdapter adapter;
-    private GoogleMap mMap;
-    private Map<String, Marker> markerMap;
 
     private List<Restaurant> allRestaurants = new ArrayList<>();
     private List<Restaurant> filteredList = new ArrayList<>();
 
-    private DatabaseReference resRef = FirebaseDatabase.getInstance("https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("restaurants");
-    private DatabaseReference reviewRef = FirebaseDatabase.getInstance("https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("reviews");
-    private DatabaseReference usersRef = FirebaseDatabase.getInstance("https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app").getReference("users");
+    private DatabaseReference resRef = FirebaseDatabase.getInstance().getReference("restaurants");
+    private DatabaseReference reviewRef = FirebaseDatabase.getInstance().getReference("reviews");
 
     private int totalRestaurants = 0;
     private int loadedRestaurants = 0;
 
     private Location currentUserLocation;
-    private boolean isAdmin = false;
 
     private void bindViews() {
         recyclerNearby = findViewById(R.id.l_recyclerNearby);
         spinnerRadius = findViewById(R.id.l_spinnerRadius);
 
-        // Kiểm tra vai trò admin
-        checkUserRole();
-
         // Gắn adapter với danh sách được lọc
-        adapter = new RestaurantAdapter(this, filteredList, R.layout.item_restaurant, this::moveToRestaurantLocation);
+        adapter = new RestaurantAdapter(this, filteredList);
         recyclerNearby.setLayoutManager(new LinearLayoutManager(this));
         recyclerNearby.setAdapter(adapter);
     }
@@ -86,44 +69,10 @@ public class NearbyListActivity extends AppCompatActivity implements OnMapReadyC
             return insets;
         });
 
-        // Khởi tạo bản đồ
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
         bindViews();
         loadCurrentLocation();
-        setupRadiusFilter();
+        setupRadiusFilter(); // ✅ bật lại filter
         fetchRestaurantsFromFirebase();
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        markerMap = new HashMap<>();
-        // Di chuyển camera đến vị trí mặc định (ví dụ: trung tâm Hà Nội)
-        LatLng defaultLocation = new LatLng(21.0285, 105.8542);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 10));
-        // Cập nhật marker sau khi bản đồ sẵn sàng
-        updateMapMarkers();
-    }
-
-    private void checkUserRole() {
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        usersRef.child(uid).child("role").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String role = snapshot.getValue(String.class);
-                isAdmin = "admin".equals(role);
-                adapter.notifyDataSetChanged(); // Cập nhật adapter để hiển thị/ẩn Switch
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "checkUserRole: Lỗi kiểm tra vai trò: " + error.getMessage());
-                Toast.makeText(NearbyListActivity.this, "Lỗi kiểm tra vai trò", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void loadCurrentLocation() {
@@ -139,7 +88,7 @@ public class NearbyListActivity extends AppCompatActivity implements OnMapReadyC
         spinnerRadius.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                filterNearbyRestaurants();
+                filterNearbyRestaurants(); // ✅ lọc mỗi khi chọn bán kính mới
             }
 
             @Override
@@ -183,7 +132,7 @@ public class NearbyListActivity extends AppCompatActivity implements OnMapReadyC
                                     loadedRestaurants++;
 
                                     if (loadedRestaurants == totalRestaurants) {
-                                        filterNearbyRestaurants();
+                                        filterNearbyRestaurants(); // ✅ lọc khi đủ dữ liệu
                                     }
                                 }
 
@@ -201,7 +150,6 @@ public class NearbyListActivity extends AppCompatActivity implements OnMapReadyC
                     if (totalRestaurants == 0) {
                         filteredList.clear();
                         adapter.notifyDataSetChanged();
-                        updateMapMarkers();
                     }
                 }
 
@@ -211,7 +159,7 @@ public class NearbyListActivity extends AppCompatActivity implements OnMapReadyC
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+            Log.e("NearbyListActivity.Debug", e.getMessage());
         }
     }
 
@@ -240,36 +188,5 @@ public class NearbyListActivity extends AppCompatActivity implements OnMapReadyC
         }
 
         adapter.notifyDataSetChanged();
-        updateMapMarkers();
-    }
-
-    private void updateMapMarkers() {
-        if (mMap == null) return;
-        mMap.clear();
-        markerMap.clear();
-        for (Restaurant res : filteredList) {
-            if (res.isVisible) {
-                LatLng location = new LatLng(res.latitude, res.longitude);
-                Marker marker = mMap.addMarker(new MarkerOptions()
-                        .position(location)
-                        .title(res.name)
-                        .snippet(res.address));
-                markerMap.put(res.getKey(), marker);
-            }
-        }
-    }
-
-    private void moveToRestaurantLocation(Restaurant restaurant) {
-        LatLng location = new LatLng(restaurant.latitude, restaurant.longitude);
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
-        Marker marker = markerMap.get(restaurant.getKey());
-        if (marker != null) {
-            marker.showInfoWindow();
-        }
-        Log.d(TAG, "moveToRestaurantLocation: Di chuyển camera đến " + restaurant.name);
-    }
-
-    public boolean isAdmin() {
-        return isAdmin;
     }
 }
