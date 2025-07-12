@@ -24,7 +24,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.adapters.NearbyAdapter;
 import com.prm392.foodmap.adapters.RestaurantAdapter;
+import com.prm392.foodmap.fragments.MapsFragment;
 import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
@@ -35,13 +37,15 @@ public class NearbyListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerNearby;
     private Spinner spinnerRadius;
-    private RestaurantAdapter adapter;
+    private NearbyAdapter adapter;
 
     private List<Restaurant> allRestaurants = new ArrayList<>();
     private List<Restaurant> filteredList = new ArrayList<>();
 
     private DatabaseReference resRef = FirebaseDatabase.getInstance().getReference("restaurants");
     private DatabaseReference reviewRef = FirebaseDatabase.getInstance().getReference("reviews");
+
+    private MapsFragment mapsFragment;
 
     private int totalRestaurants = 0;
     private int loadedRestaurants = 0;
@@ -53,10 +57,19 @@ public class NearbyListActivity extends AppCompatActivity {
         spinnerRadius = findViewById(R.id.l_spinnerRadius);
 
         // Gắn adapter với danh sách được lọc
-        adapter = new RestaurantAdapter(this, filteredList);
+        adapter = new NearbyAdapter(this, filteredList, restaurant ->{
+            moveMapToRestaurant(restaurant);
+        } );
         recyclerNearby.setLayoutManager(new LinearLayoutManager(this));
         recyclerNearby.setAdapter(adapter);
     }
+
+    private void moveMapToRestaurant(Restaurant restaurant) {
+        if (mapsFragment != null) {
+            mapsFragment.moveCamera(restaurant.getKey());
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +81,7 @@ public class NearbyListActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        mapsFragment = (MapsFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView);
 
         bindViews();
         loadCurrentLocation();
@@ -183,9 +197,11 @@ public class NearbyListActivity extends AppCompatActivity {
 
             float distanceMeters = currentUserLocation.distanceTo(resLoc);
             if (distanceMeters <= radiusKm * 1000) {
+                res.distance = distanceMeters / 1000.0f;
                 filteredList.add(res);
             }
         }
+        filteredList.sort((r1, r2) -> Float.compare(r2.averageRating, r1.averageRating));
 
         adapter.notifyDataSetChanged();
     }

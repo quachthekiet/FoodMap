@@ -13,7 +13,7 @@
         android:padding="8dp">
 
         <ImageView
-            android:id="@+id/l_imgRestaurant"
+            android:id="@+id/n_imgRestaurant"
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:scaleType="fitCenter"
@@ -27,7 +27,7 @@
             android:paddingStart="8dp">
 
             <TextView
-                android:id="@+id/l_txtName"
+                android:id="@+id/n_txtName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Tên quán"
@@ -35,7 +35,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/l_txtAddress"
+                android:id="@+id/n_txtAddress"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Địa chỉ"
@@ -47,13 +47,13 @@
 
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="4dp">
 
                 <RatingBar
-                    android:id="@+id/l_ratingBar"
+                    android:id="@+id/n_ratingBar"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:numStars="5"
@@ -63,14 +63,25 @@
                     style="@style/Widget.AppCompat.RatingBar.Small" />
 
                 <TextView
-                    android:id="@+id/l_txtRatingCount"
+                    android:id="@+id/n_txtRatingCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="4.0"
                     android:textSize="12sp"
                     android:textColor="#FFA000"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="1dp"
                     android:layout_gravity="center_vertical"/>
+                <TextView
+                    android:id="@+id/n_tvDistance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="(1.2 km)"
+                    android:layout_marginStart="10dp"
+                    android:layout_gravity="center_vertical"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    />
+
             </LinearLayout>
 
         </LinearLayout>

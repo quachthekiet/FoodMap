@@ -1,6 +1,8 @@
+// AdminRestaurantAdapter.java
 package com.prm392.foodmap.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
@@ -21,38 +23,32 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
     }
 
     private final Context context;
-    private List<Restaurant> data;
+    private final List<Restaurant> data;
     private final int layoutResId;
     private final OnRestaurantClickListener clickListener;
 
-    public AdminRestaurantAdapter(Context ctx,
-                                  List<Restaurant> list,
+    public AdminRestaurantAdapter(Context context, List<Restaurant> data,
                                   int layoutResId,
-                                  OnRestaurantClickListener listener) {
-        this.context = ctx;
-        this.data = list;
+                                  OnRestaurantClickListener clickListener) {
+        this.context = context;
+        this.data = data;
         this.layoutResId = layoutResId;
-        this.clickListener = listener;
-    }
-
-    public void setRestaurantList(List<Restaurant> newList) {
-        data = newList;
-        notifyDataSetChanged();
+        this.clickListener = clickListener;
     }
 
     static class VH extends RecyclerView.ViewHolder {
-        TextView txtName, txtAddress;
         ImageView img;
-        Switch swVisible;
-        Button btnVerify;  // ✅ Button thay vì Switch
+        TextView txtName, txtAddress;
+        RatingBar ratingBar;
+        Button btnVerify;
 
         VH(View item) {
             super(item);
-            txtName    = item.findViewById(R.id.l_txtName);
+            img = item.findViewById(R.id.l_imgRestaurant);
+            txtName = item.findViewById(R.id.l_txtName);
             txtAddress = item.findViewById(R.id.l_txtAddress);
-            img        = item.findViewById(R.id.l_imgRestaurant);
-            swVisible  = item.findViewById(R.id.switchVisible);
-            btnVerify  = item.findViewById(R.id.btnVerify);
+            ratingBar = item.findViewById(R.id.l_ratingBar);
+            btnVerify = item.findViewById(R.id.btnVerify);
         }
     }
 
@@ -65,54 +61,36 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int pos) {
-        Restaurant res = data.get(pos);
+        Log.d("ADAPTER_DEBUG", "Using AdminAdapter layout");
 
+        Restaurant res = data.get(pos);
         h.txtName.setText(res.name);
         h.txtAddress.setText(res.address);
+        h.ratingBar.setRating((float) res.averageRating);
 
-        // Load ảnh
         if (res.images != null && !res.images.isEmpty()) {
             String url = res.images.values().iterator().next();
             Glide.with(context).load(url).into(h.img);
         }
 
-        // Xử lý visible (nếu có)
-        if (h.swVisible != null) {
-            h.swVisible.setOnCheckedChangeListener(null);
-            h.swVisible.setChecked(res.isVisible);
-            h.swVisible.setOnCheckedChangeListener((b, checked) -> {
-                res.isVisible = checked;
+        if (res.isVerified) {
+            h.btnVerify.setVisibility(View.GONE);
+        } else {
+            h.btnVerify.setVisibility(View.VISIBLE);
+            h.btnVerify.setOnClickListener(v -> {
                 FirebaseDatabase.getInstance()
                         .getReference("restaurants")
                         .child(res.getKey())
-                        .child("isVisible")
-                        .setValue(checked);
+                        .child("isVerified")
+                        .setValue(true)
+                        .addOnSuccessListener(task -> {
+                            Toast.makeText(context, "Đã xác minh " + res.name, Toast.LENGTH_SHORT).show();
+                            res.isVerified = true;
+                            notifyItemChanged(h.getAdapterPosition());
+                        });
             });
         }
 
-        // ✅ Xác minh nhà hàng
-        if (h.btnVerify != null) {
-            // Ẩn nút nếu đã xác minh
-            if (res.isVerified) {
-                h.btnVerify.setVisibility(View.GONE);
-            } else {
-                h.btnVerify.setVisibility(View.VISIBLE);
-                h.btnVerify.setOnClickListener(v -> {
-                    FirebaseDatabase.getInstance()
-                            .getReference("restaurants")
-                            .child(res.getKey())
-                            .child("isVerified")
-                            .setValue(true)
-                            .addOnSuccessListener(task -> {
-                                Toast.makeText(context, "Đã xác minh " + res.name, Toast.LENGTH_SHORT).show();
-                                res.isVerified = true;
-                                notifyItemChanged(h.getAdapterPosition()); // cập nhật giao diện
-                            });
-                });
-            }
-        }
-
-        // Click item → zoom map
         h.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onRestaurantClick(res);
         });

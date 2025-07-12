@@ -20,6 +20,8 @@ public class Restaurant {
     public transient float averageRating = 0;
     public transient int reviewCount = 0;
 
+    public transient float distance;
+
     // Transient field - không lưu vào Firebase
     public transient String key;
 
