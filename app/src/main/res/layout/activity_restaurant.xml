@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#F9F9F9">
+    android:background="#fff">
 
     <LinearLayout
         android:orientation="vertical"
@@ -18,10 +18,8 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@android:color/white"
-            android:padding="16dp"
             android:elevation="2dp"
             android:layout_marginBottom="12dp"
-            android:layout_marginTop="4dp"
             android:clipToPadding="false">
 
             <FrameLayout
@@ -39,12 +37,14 @@
                     android:gravity="center"
                     />
 
-                <Button
-                    android:id="@+id/button2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:text="Button" />
+                <ImageButton
+                    android:id="@+id/btnFavorite"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="end|center"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Yêu thích"
+                    android:src="@drawable/ic_heart_outline"/>
             </FrameLayout>
 
             <TextView
@@ -69,8 +69,7 @@
                 android:layout_height="200dp"
                 android:layout_marginTop="8dp"
                 android:background="#E0E0E0"
-                android:clipToPadding="false"
-                android:elevation="1dp" />
+                android:clipToPadding="false"/>
         </LinearLayout>
 
         <!-- Review input -->
@@ -79,9 +78,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@android:color/white"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp"
-            android:elevation="2dp">
+            android:layout_marginBottom="12dp">
 
             <TextView
                 android:layout_width="match_parent"
@@ -90,39 +87,59 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#212121"
-                android:paddingBottom="8dp" />
+                android:paddingBottom="5dp" />
 
             <RatingBar
                 android:id="@+id/ratingBarInput"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:numStars="5"
-                android:stepSize="1.0"
-                android:rating="0"
+                android:stepSize="1"
+                android:rating="5"
                 android:isIndicator="false"
-                android:layout_marginBottom="8dp" />
+                style="?android:attr/ratingBarStyleIndicator"
+                android:theme="@style/Widget.AppCompat.RatingBar.Small"
+                />
 
-            <EditText
-                android:id="@+id/edtReview"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                android:ems="10"
-                android:gravity="start|top"
-                android:inputType="textMultiLine"
-                android:hint="Viết đánh giá của bạn tại đây..."
-                android:background="@android:drawable/edit_text"
-                android:padding="8dp"
-                android:textColor="#000000"
-                android:textSize="14sp"
-                android:layout_marginBottom="12dp" />
-
-            <Button
-                android:id="@+id/btnReview"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Gửi đánh giá"
-                android:backgroundTint="#2196F3"
-                android:textColor="#FFFFFF" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/edtReview"
+                    android:layout_width="0dp"
+                    android:layout_height="43dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:background="@android:drawable/edit_text"
+                    android:gravity="center_vertical|start"
+                    android:hint="Viết đánh giá của bạn tại đây..."
+                    android:inputType="textMultiLine"
+                    android:maxLines="3"
+                    android:minHeight="68dp"
+                    android:padding="8dp"
+                    android:textColor="#000000"
+                    android:textSize="14sp" />
+
+                <FrameLayout
+                    android:layout_width="68dp"
+                    android:layout_height="match_parent"
+                    android:gravity="start">
+
+                    <Button
+                        android:id="@+id/btnReview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:backgroundTint="#2196F3"
+                        android:text="Gửi"
+                        android:textColor="#FFFFFF" />
+                </FrameLayout>
+            </LinearLayout>
+
+
+
         </LinearLayout>
 
         <!-- Tiêu đề Reviews -->
@@ -130,7 +147,6 @@
             android:text="Đánh giá gần đây"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:paddingTop="8dp"
             android:paddingBottom="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
