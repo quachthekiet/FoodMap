@@ -7,6 +7,7 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,9 +32,19 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.prm392.foodmap.activities.RestaurantActivity;
+import com.prm392.foodmap.models.Restaurant;
+import com.prm392.foodmap.utils.LocationUtil;
 
 
 public class MapsFragment extends Fragment {
@@ -41,6 +52,7 @@ public class MapsFragment extends Fragment {
     private FloatingActionButton btnMyLocation;
     private boolean isGPSDialogShown = false;
     private boolean userDeniedGPS = false;
+    private boolean shouldUpdateCameraFromGPS = false;
     private GoogleMap googleMap;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final int REQUEST_CHECK_SETTINGS = 1002;
@@ -52,12 +64,16 @@ public class MapsFragment extends Fragment {
         public void onMapReady(GoogleMap gMap) {
             googleMap = gMap;
 
-            // ❌ Tắt nút định vị mặc định
             googleMap.getUiSettings().setMyLocationButtonEnabled(false);
 
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext());
-
+            LatLng cached = LocationUtil.getSavedLocation(requireContext());
+            if(cached != null) {
+                moveCamera(cached,13f);
+            }
+            loadRestaurantMarkers();
             requestLocationPermission();
+
         }
     };
 
@@ -82,6 +98,7 @@ public class MapsFragment extends Fragment {
         btnMyLocation = view.findViewById(R.id.btnMyLocation);
         btnMyLocation.setOnClickListener(v -> {
             isGPSDialogShown = false; // ✅ Reset flag
+            shouldUpdateCameraFromGPS = true;
             requestLocationPermission(); // Tiếp tục check GPS và quyền
         });
 
@@ -95,6 +112,49 @@ public class MapsFragment extends Fragment {
         if (googleMap != null) {
             requestLocationPermission();
         }
+    }
+
+    private void loadRestaurantMarkers() {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("restaurants");
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot resSnap : snapshot.getChildren()) {
+                    Restaurant restaurant = resSnap.getValue(Restaurant.class);
+                    Log.d("kiet.debug", "Name: " + restaurant.name + ", Lat: " + restaurant.latitude + ", Lng: " + restaurant.longitude);
+
+
+                    if (restaurant != null && restaurant.isVisible) {
+                        restaurant.setKey(resSnap.getKey()); // Lưu id
+
+                        LatLng position = new LatLng(restaurant.latitude, restaurant.longitude);
+                        Marker marker = googleMap.addMarker(new MarkerOptions()
+                                .position(position)
+                                .title(restaurant.name));
+
+                        marker.setTag(restaurant.getKey());
+                    }
+                }
+
+                // Sau khi load xong, xử lý sự kiện click vào marker
+                googleMap.setOnMarkerClickListener(marker -> {
+                    String resId = (String) marker.getTag();
+                    if (resId != null) {
+                        Intent intent = new Intent(getContext(), RestaurantActivity.class);
+                        intent.putExtra("RESTAURANT_ID", resId);
+                        startActivity(intent);
+                    }
+                    return false;
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Lỗi tải nhà hàng: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
     }
 
     private void requestLocationPermission() {
@@ -128,14 +188,21 @@ public class MapsFragment extends Fragment {
         fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
                 LatLng currentLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                moveCamera(currentLatLng);
+                LocationUtil.saveLocation(requireContext(), currentLatLng.latitude, currentLatLng.longitude);
+                if (shouldUpdateCameraFromGPS) {
+                    moveCamera(currentLatLng); // ✅ chỉ move khi có cờ
+                    shouldUpdateCameraFromGPS = false; // reset
+                }
             } else {
                 // Nếu không lấy được last location, dùng current location
                 fusedLocationClient.getCurrentLocation(LocationRequest.PRIORITY_HIGH_ACCURACY, null)
                         .addOnSuccessListener(newLocation -> {
                             if (newLocation != null) {
                                 LatLng currentLatLng = new LatLng(newLocation.getLatitude(), newLocation.getLongitude());
-                                moveCamera(currentLatLng);
+                                if (shouldUpdateCameraFromGPS) {
+                                    moveCamera(currentLatLng);
+                                    shouldUpdateCameraFromGPS = false;
+                                }
                             } else {
                                 Toast.makeText(getContext(), "Không thể lấy vị trí hiện tại", Toast.LENGTH_SHORT).show();
                             }
@@ -174,18 +241,27 @@ public class MapsFragment extends Fragment {
                     sendEx.printStackTrace();
                 }
             } else {
-                if (!userDeniedGPS) {
-                    Toast.makeText(getContext(), "Không thể bật GPS", Toast.LENGTH_SHORT).show();
-                }
+//                if (!userDeniedGPS) {
+//                    Toast.makeText(getContext(), "Không thể bật GPS", Toast.LENGTH_SHORT).show();
+//                }
+
             }
         });
+    }
+
+    public void moveCamera(LatLng latLng, float zoom) {
+        if (googleMap != null) {
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom));
+        } else {
+            Toast.makeText(getContext(), "Bản đồ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
 
     public void moveCamera(LatLng latLng) {
         if (googleMap != null) {
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14f));
         } else {
             Toast.makeText(getContext(), "Bản đồ chưa sẵn sàng", Toast.LENGTH_SHORT).show();
         }

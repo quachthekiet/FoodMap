@@ -27,6 +27,10 @@
             android:exported="true" />
         <activity
             android:name=".activities.AddRestaurantActivity"
+            android:name=".activities.AdminActivity"
+            android:exported="true" />
+        <activity
+            android:name=".activities.NearbyListActivity"
             android:exported="true" />
         <activity
             android:name=".activities.HomeActivity"
@@ -56,6 +60,10 @@
         <activity
             android:name=".activities.LoginActivity"
             android:exported="true"></activity>
+            android:exported="true" />
+        <activity
+            android:name=".activities.RestaurantActivity"
+            android:exported="true" />
     </application>
 
 </manifest>

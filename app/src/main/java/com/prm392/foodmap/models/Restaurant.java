@@ -16,6 +16,9 @@ public class Restaurant {
     public long createdAt;
     public long updatedAt;
 
+    public transient float averageRating = 0;
+    public transient int reviewCount = 0;
+
     // Transient field - không lưu vào Firebase
     public transient String key;
 

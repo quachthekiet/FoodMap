@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp"
+    >
+
+    <TextView
+        android:id="@+id/l_txtHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quán ăn gần bạn"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#212121"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="12dp" />
+    <!-- Tiêu đề và bộ lọc bán kính -->
+    <LinearLayout
+        android:id="@+id/l_filterRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/l_txtFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bán kính (km): "
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/l_spinnerRadius"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/radius_options"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/l_recyclerNearby"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp" />
+
+</LinearLayout>
