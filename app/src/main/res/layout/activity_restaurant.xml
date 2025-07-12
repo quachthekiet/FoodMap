@@ -4,23 +4,31 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:background="#fff">
+    android:background="#EDEDED">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <!-- Tên quán -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPagerImages"
+            android:layout_width="match_parent"
+            android:layout_height="241dp"
+            android:background="#F2F2F2"
+            android:clipToPadding="false">
+
+        </androidx.viewpager2.widget.ViewPager2>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@android:color/white"
-            android:elevation="2dp"
             android:layout_marginBottom="12dp"
-            android:clipToPadding="false">
+            android:background="@android:color/white"
+            android:clipToPadding="false"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp">
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -30,12 +38,11 @@
                     android:id="@+id/tvName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:paddingBottom="4dp"
+                    android:layout_marginVertical="10dp"
+                    android:gravity="start"
                     android:textColor="#212121"
                     android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:gravity="center"
-                    />
+                    android:textStyle="bold" />
 
                 <ImageButton
                     android:id="@+id/btnFavorite"
@@ -44,68 +51,81 @@
                     android:layout_gravity="end|center"
                     android:background="@android:color/transparent"
                     android:contentDescription="Yêu thích"
-                    android:src="@drawable/ic_heart_outline"/>
+                    android:src="@drawable/ic_heart_outline" />
+
             </FrameLayout>
-
-            <TextView
-                android:id="@+id/tvAddress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#555555"
-                android:textSize="15sp"
-                android:paddingBottom="2dp" />
-
-            <TextView
-                android:id="@+id/tvPhone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="#555555"
-                android:textSize="15sp"
-                android:paddingBottom="8dp" />
-
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/viewPagerImages"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginTop="8dp"
-                android:background="#E0E0E0"
-                android:clipToPadding="false"/>
-        </LinearLayout>
-
-        <!-- Review input -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@android:color/white"
-            android:layout_marginBottom="12dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Đánh giá của bạn"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#212121"
-                android:paddingBottom="5dp" />
-
-            <RatingBar
-                android:id="@+id/ratingBarInput"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:numStars="5"
-                android:stepSize="1"
-                android:rating="5"
-                android:isIndicator="false"
-                style="?android:attr/ratingBarStyleIndicator"
-                android:theme="@style/Widget.AppCompat.RatingBar.Small"
-                />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingBottom="2dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_location"
+                    />
+
+                <TextView
+                    android:id="@+id/tvAddress"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:textColor="#74D033"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+
+            <TextView
+                android:id="@+id/tvPhone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:textColor="#555555"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@android:color/white"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
+            >
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Đánh giá của bạn"
+                android:textColor="#212121"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RatingBar
+                android:id="@+id/ratingBarInput"
+                style="?android:attr/ratingBarStyleIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:isIndicator="false"
+                android:numStars="5"
+                android:rating="5"
+                android:stepSize="1"
+                android:layout_marginVertical="10dp"
+                android:theme="@style/Widget.AppCompat.RatingBar.Small" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <EditText
                     android:id="@+id/edtReview"
@@ -119,7 +139,6 @@
                     android:inputType="textMultiLine"
                     android:maxLines="3"
                     android:minHeight="68dp"
-                    android:padding="8dp"
                     android:textColor="#000000"
                     android:textSize="14sp" />
 
@@ -139,20 +158,19 @@
             </LinearLayout>
 
 
-
         </LinearLayout>
 
-        <!-- Tiêu đề Reviews -->
         <TextView
-            android:text="Đánh giá gần đây"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:paddingBottom="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#212121" />
+            android:paddingBottom="4dp"
+            android:text="Đánh giá gần đây"
+            android:textColor="#212121"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginHorizontal="16dp"
+            />
 
-        <!-- Danh sách review -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerReviews"
             android:layout_width="match_parent"
