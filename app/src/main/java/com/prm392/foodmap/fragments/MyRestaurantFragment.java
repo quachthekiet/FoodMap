@@ -86,7 +86,7 @@ public class MyRestaurantFragment extends Fragment {
     }
 
     private void bindingAction() {
-        adapter = new MyRestaurantAdapter(restaurantList, rwk -> {
+        adapter = new MyRestaurantAdapter(requireContext(),restaurantList, rwk -> {
             Intent intent = new Intent(getContext(), UpdateRestaurantActivity.class);
             intent.putExtra("restaurantKey", rwk.getKey());
             updateLauncher.launch(intent);
