@@ -48,8 +48,26 @@
             android:layout_marginBottom="32dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/btnAddRestaurant"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="#FF9800"
+            android:text="Thêm nhà hàng"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
 
-        <!-- Đăng xuất / Đăng nhập -->
+        <Button
+            android:id="@+id/btnMyRestaurant"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="#4CAF50"
+            android:text="Quán của tôi"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+        <!-- Logout Button (using a standard Button for simplicity) -->
         <Button
             android:id="@+id/btnLogout"
             android:layout_width="200dp"

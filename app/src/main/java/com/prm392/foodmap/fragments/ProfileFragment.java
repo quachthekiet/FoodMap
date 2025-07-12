@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
 import com.prm392.foodmap.activities.AdminActivity;
+import com.prm392.foodmap.activities.AddRestaurantActivity;
 import com.prm392.foodmap.models.Constants;
 
 import java.util.Objects;
@@ -36,6 +38,9 @@ public class ProfileFragment extends Fragment {
     private TextView tvEmail, tvName;
     private Button   btnAuth;      // Đăng nhập / Đăng xuất
     private Button   btnManage;    // Quản lý (chỉ admin mới thấy)
+    private Button btnMyRestaurant;
+
+    private Button btnAddRestaurant;
 
     // Firebase --------------------------------------------------------------
     private FirebaseAuth        mAuth;
@@ -81,10 +86,30 @@ public class ProfileFragment extends Fragment {
         tvName    = v.findViewById(R.id.tvName);
         btnAuth   = v.findViewById(R.id.btnLogout);   // nút đã có sẵn trong layout
         btnManage = v.findViewById(R.id.btnManage);   // bạn vừa thêm trong XML
-
+        btnAddRestaurant = v.findViewById(R.id.btnAddRestaurant);
+        btnMyRestaurant = v.findViewById(R.id.btnMyRestaurant);
         mAuth = FirebaseAuth.getInstance();
         updateUI(mAuth.getCurrentUser());
-
+        btnAddRestaurant.setOnClickListener(view -> {
+            // Kiểm tra đăng nhập
+            if (mAuth.getCurrentUser() == null) {
+                Toast.makeText(getContext(), "Vui lòng đăng nhập để thêm nhà hàng", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            startActivity(new Intent(getContext(), AddRestaurantActivity.class));
+        });
+        btnMyRestaurant.setOnClickListener(view -> {
+            // Kiểm tra đăng nhập
+            if (mAuth.getCurrentUser() == null) {
+                Toast.makeText(getContext(), "Vui lòng đăng nhập để xem My Restaurant", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.profileDrawer, new MyRestaurantFragment()) // ID của container trong Activity
+                    .addToBackStack(null)
+                    .commit();
+        });                       
         // “Quản lý” – mặc định ẩn, chỉ hiển thị nếu là admin
         btnManage.setVisibility(View.GONE);
         btnManage.setOnClickListener(view ->
