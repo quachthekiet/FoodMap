@@ -40,6 +40,8 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
     private Button pickLoc_btnConfirm;
     private LatLng selectedLatLng;
 
+    private LatLng initialLatLng = null;
+
     private ExecutorService executorService;
 
     @Override
@@ -55,6 +57,12 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
         });
 
         bindingView();
+        double lat = getIntent().getDoubleExtra("latitude", 0);
+        double lng = getIntent().getDoubleExtra("longitude", 0);
+        if (lat != 0 && lng != 0) {
+            initialLatLng = new LatLng(lat, lng);
+        }
+
         bindingAction();
 
         executorService = Executors.newSingleThreadExecutor();
@@ -111,14 +119,20 @@ public class LocationPickerActivity extends AppCompatActivity implements OnMapRe
         if (!PermissionHelper.hasFineLocationPermission(this)) return;
 
         mMap.setMyLocationEnabled(true);
-
-        LocationHelper.getLastKnownLocation(this, location -> {
-            LatLng target = (location != null)
-                    ? new LatLng(location.getLatitude(), location.getLongitude())
-                    : new LatLng(21.0278, 105.8342); // default Hanoi
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(target, 15));
-            updateAddress(target);
-        });
+        if (initialLatLng != null) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(initialLatLng, 15));
+            selectedLatLng = initialLatLng;
+            updateAddress(initialLatLng);
+        } else {
+            LocationHelper.getLastKnownLocation(this, location -> {
+                LatLng target = (location != null)
+                        ? new LatLng(location.getLatitude(), location.getLongitude())
+                        : new LatLng(21.0278, 105.8342); // default Hanoi
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(target, 15));
+                selectedLatLng = target;
+                updateAddress(target);
+            });
+        }
     }
 
     private void updateAddress(LatLng latLng) {

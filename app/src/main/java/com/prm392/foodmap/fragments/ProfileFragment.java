@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,6 +23,8 @@ public class ProfileFragment extends Fragment {
     private TextView tvEmail, tvName;
     private Button btnAuth;
     private FirebaseAuth mAuth;
+
+    private Button btnMyRestaurant;
 
     private OnAuthButtonClickListener authButtonClickListener;
     private GoogleSignInClient mGoogleSignInClient;
@@ -61,10 +64,21 @@ public class ProfileFragment extends Fragment {
         tvEmail = view.findViewById(R.id.tvEmail);
         tvName = view.findViewById(R.id.tvName);
         btnAuth = view.findViewById(R.id.btnLogout);
-
+        btnMyRestaurant = view.findViewById(R.id.btnMyRestaurant);
         mAuth = FirebaseAuth.getInstance();
         updateUI(mAuth.getCurrentUser());
-
+        btnMyRestaurant.setOnClickListener(v -> {
+            // Kiểm tra đăng nhập
+            if (mAuth.getCurrentUser() == null) {
+                Toast.makeText(getContext(), "Vui lòng đăng nhập để xem My Restaurant", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.profileDrawer, new MyRestaurantFragment()) // ID của container trong Activity
+                    .addToBackStack(null)
+                    .commit();
+        });
         return view;
     }
 

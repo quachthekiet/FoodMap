@@ -40,6 +40,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.prm392.foodmap.R;
 import com.prm392.foodmap.adapters.ImageGalleryAdapter;
 import com.prm392.foodmap.config.CloudinaryConfig;
+import com.prm392.foodmap.interfaces.DataCallback;
+import com.prm392.foodmap.utils.FirebaseHelper;
 import com.prm392.foodmap.utils.LocationHelper;
 import com.prm392.foodmap.utils.ValidationHelper;
 
@@ -179,15 +181,19 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
         String newRestaurantId = restaurantsRef.push().getKey();
 
         if (newRestaurantId != null) {
-            restaurantsRef.child(newRestaurantId)
-                    .setValue(restaurantData)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Gửi yêu cầu thành công!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Lỗi gửi yêu cầu: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    });
+            FirebaseHelper.addRestaurant(restaurantData, new DataCallback<Void>() {
+                @Override
+                public void onSuccess(Void unused) {
+                    Toast.makeText(AddRestaurantActivity.this, "Gửi yêu cầu thành công!", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+
+                @Override
+                public void onError(String errorMessage) {
+                    Toast.makeText(AddRestaurantActivity.this, "Lỗi gửi yêu cầu: " + errorMessage, Toast.LENGTH_LONG).show();
+                }
+            });
+
         } else {
             Toast.makeText(this, "Lỗi tạo ID quán ăn", Toast.LENGTH_LONG).show();
         }
@@ -196,6 +202,10 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
 
     private void onBtnSelectLocationClick(View view) {
         Intent intent = new Intent(this, LocationPickerActivity.class);
+        if (selectedLatLng != null) {
+            intent.putExtra("latitude", selectedLatLng.latitude);
+            intent.putExtra("longitude", selectedLatLng.longitude);
+        }
         startActivityForResult(intent, LOCATION_PICKER_REQUEST);
     }
 
