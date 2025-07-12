@@ -167,7 +167,7 @@ public class MapsFragment extends Fragment {
         if(googleMap != null) {
             Marker marker = markerMap.get(restaurantId);
             if (marker != null) {
-                moveCamera(marker.getPosition(), 17f);
+                moveCamera(marker.getPosition(), 16f);
                 marker.showInfoWindow();
             }
         }
