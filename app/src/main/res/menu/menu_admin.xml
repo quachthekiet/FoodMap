@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/mn_all"
+        android:title="Tất cả"/>
+    <item
+        android:id="@+id/mn_verify"
+        android:title="Chờ xác minh"/>
+</menu>

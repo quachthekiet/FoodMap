@@ -2,6 +2,8 @@ package com.prm392.foodmap.activities;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -14,6 +16,7 @@ import com.google.android.gms.maps.model.*;
 import com.google.firebase.database.*;
 
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.adapters.AdminAdapter;
 import com.prm392.foodmap.adapters.AdminRestaurantAdapter;
 import com.prm392.foodmap.adapters.RestaurantAdapter;
 import com.prm392.foodmap.models.Restaurant;
@@ -23,113 +26,141 @@ import java.util.*;
 public class AdminActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "AdminActivity";
+
+    // Map -------------------------------------------------------------
     private GoogleMap mMap;
-    private RecyclerView recyclerView;
-    private AdminRestaurantAdapter restaurantAdapter;
-    private List<Restaurant> restaurantList;
-    private DatabaseReference restaurantsRef;
-    private Map<String, Marker> markerMap;
+    private Map<String, Marker> markerMap = new HashMap<>();
 
+    // RecyclerView ----------------------------------------------------
+    private RecyclerView recycler;
+    private final List<Restaurant> data = new ArrayList<>();
+    private AdminAdapter viewAdapter;   // quản lý chung
+    private AdminRestaurantAdapter   verifyAdapter; // xác minh pin
 
+    // Firebase --------------------------------------------------------
+    private final DatabaseReference resRef = FirebaseDatabase
+            .getInstance("https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app")
+            .getReference("restaurants");
+
+    // -----------------------------------------------------------------
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle b) {
+        super.onCreate(b);
         setContentView(R.layout.activity_admin);
 
-        // Hiện nút back trên AppBar
+        // AppBar back
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Quản lý nhà hàng");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         // Map
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        SupportMapFragment mapFr = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        Objects.requireNonNull(mapFr).getMapAsync(this);
 
-        // RecyclerView
-        recyclerView = findViewById(R.id.recyclerViewRestaurants);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        restaurantList = new ArrayList<>();
-        markerMap = new HashMap<>();
+        // Recycler
+        recycler = findViewById(R.id.recyclerViewRestaurants);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
 
-        restaurantAdapter = new AdminRestaurantAdapter(
-                this,
-                restaurantList,
-                R.layout.item_pin_restaurant_admin,
-                this::moveToRestaurantLocation
+        viewAdapter = new AdminAdapter(
+                this, data, R.layout.item_pin_restaurant_admin, this::moveCameraTo
         );
-        recyclerView.setAdapter(restaurantAdapter);
 
-        // Firebase
-        restaurantsRef = FirebaseDatabase.getInstance(
-                "https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app"
-        ).getReference("restaurants");
+        verifyAdapter = new AdminRestaurantAdapter(
+                this, data, R.layout.item_verify_pin_restaurant_admin, this::moveCameraTo
+        );
 
-        loadRestaurants();
+        // mặc định vào “quản lý chung”
+        recycler.setAdapter(viewAdapter);
+        loadAllRestaurants();
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
+    // Back trên AppBar
+    @Override public boolean onSupportNavigateUp() { onBackPressed(); return true; }
+
+    // -----------------------------------------------------------------
+    /*  MENU:  ⋮ -> “Tất cả”  hoặc  “Chờ xác minh”  */
+    @Override public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_admin, menu);
         return true;
     }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        LatLng defaultLocation = new LatLng(21.0285, 105.8542); // Hà Nội
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 10));
+    @Override public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.mn_all)          loadAllRestaurants();
+        else if (item.getItemId() == R.id.mn_verify)  loadUnverifiedRestaurants();
+        return super.onOptionsItemSelected(item);
     }
 
-    private void loadRestaurants() {
-        restaurantsRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                restaurantList.clear();
-                if (mMap != null) {
-                    mMap.clear();
-                    markerMap.clear();
-                }
-
-                for (DataSnapshot data : snapshot.getChildren()) {
-                    Restaurant res = data.getValue(Restaurant.class);
-                    if (res != null) {
-                        res.setKey(data.getKey());
-                        restaurantList.add(res);
-
-                        if (res.isVisible && mMap != null) {
-                            LatLng location = new LatLng(res.latitude, res.longitude);
-                            Marker marker = mMap.addMarker(new MarkerOptions()
-                                    .position(location)
-                                    .title(res.name)
-                                    .snippet(res.address));
-                            markerMap.put(res.getKey(), marker);
-                        }
-                    }
-                }
-
-                restaurantAdapter.setRestaurantList(restaurantList);
-                Log.d(TAG, "Đã tải " + restaurantList.size() + " nhà hàng");
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e(TAG, "Lỗi tải dữ liệu: " + error.getMessage(), error.toException());
-                Toast.makeText(AdminActivity.this, "Lỗi tải dữ liệu", Toast.LENGTH_LONG).show();
-            }
-        });
+    // -----------------------------------------------------------------
+    /** TẢI TẤT CẢ nhà hàng, dùng adapter thường */
+    private void loadAllRestaurants() {
+        recycler.setAdapter(viewAdapter);
+        resRef.addListenerForSingleValueEvent(buildListener(false));
     }
 
-    private void moveToRestaurantLocation(Restaurant res) {
-        if (mMap != null) {
-            LatLng location = new LatLng(res.latitude, res.longitude);
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 15));
+    /** TẢI CHỈ nhà hàng chưa isVerified, dùng adapter verify */
+    private void loadUnverifiedRestaurants() {
+        recycler.setAdapter(verifyAdapter);
+        resRef.orderByChild("isVerified").equalTo(false)
+                .addListenerForSingleValueEvent(buildListener(true));
+    }
 
-            Marker marker = markerMap.get(res.getKey());
-            if (marker != null) marker.showInfoWindow();
+    // -----------------------------------------------------------------
+    /** Lắng nghe Firebase, nạp data & vẽ marker */
+    private ValueEventListener buildListener(boolean onlyUnverified) {
+        return new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot snap) {
+                data.clear();
+                clearMap();
 
-            Log.d(TAG, "Đã chuyển tới: " + res.name);
-        }
+                for (DataSnapshot child : snap.getChildren()) {
+                    Restaurant r = child.getValue(Restaurant.class);
+                    if (r == null) continue;
+                    r.setKey(child.getKey());
+
+                    // Nếu đang ở chế độ unverified thì bỏ qua đã verified
+                    if (onlyUnverified && r.isVerified) continue;
+
+                    data.add(r);
+                    addMarkerIfVisible(r);
+                }
+                // refresh
+                Objects.requireNonNull(recycler.getAdapter()).notifyDataSetChanged();
+                Log.d(TAG, "Loaded: " + data.size());
+            }
+            @Override public void onCancelled(@NonNull DatabaseError e) {
+                Toast.makeText(AdminActivity.this, "Lỗi tải: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        };
+    }
+
+    // -----------------------------------------------------------------
+    /** Thêm marker khi restaurant đang visible */
+    private void addMarkerIfVisible(Restaurant r) {
+        if (!r.isVisible || mMap == null) return;
+        LatLng loc = new LatLng(r.latitude, r.longitude);
+        Marker m = mMap.addMarker(new MarkerOptions()
+                .position(loc).title(r.name).snippet(r.address));
+        markerMap.put(r.getKey(), m);
+    }
+    /** Xóa hết marker khỏi map */
+    private void clearMap() {
+        if (mMap != null) mMap.clear();
+        markerMap.clear();
+    }
+
+    // -----------------------------------------------------------------
+    @Override public void onMapReady(@NonNull GoogleMap g) {
+        mMap = g;
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(21.0285, 105.8542), 10));
+    }
+
+    private void moveCameraTo(Restaurant r) {
+        if (mMap == null) return;
+        LatLng loc = new LatLng(r.latitude, r.longitude);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
+        Marker m = markerMap.get(r.getKey());
+        if (m != null) m.showInfoWindow();
     }
 }

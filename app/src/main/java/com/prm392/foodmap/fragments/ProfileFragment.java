@@ -29,41 +29,32 @@ import com.prm392.foodmap.models.Constants;
 
 import java.util.Objects;
 
-/**
- * Hiển thị thông tin người dùng, Logout, và (nếu là admin) nút Quản lý.
- */
 public class ProfileFragment extends Fragment {
 
-    // UI -------------------------------------------------------------------
     private TextView tvEmail, tvName;
-    private Button   btnAuth;      // Đăng nhập / Đăng xuất
-    private Button   btnManage;    // Quản lý (chỉ admin mới thấy)
+    private Button btnAuth;
+    private Button btnManage;
     private Button btnMyRestaurant;
-
     private Button btnAddRestaurant;
+    private Button btnVerifyRestaurant; // 👈 Nút mới
 
-    // Firebase --------------------------------------------------------------
-    private FirebaseAuth        mAuth;
-    private GoogleSignInClient  googleClient;
+    private FirebaseAuth mAuth;
+    private GoogleSignInClient googleClient;
 
-    // callback về Activity --------------------------------------------------
     private OnAuthButtonClickListener authCallback;
 
     public interface OnAuthButtonClickListener {
-        void onAuthButtonClicked();  // khi user bấm “Đăng nhập”
-        void onLogout();             // trước khi logout
-        void onLogoutSuccess();      // sau khi logout thành công
+        void onAuthButtonClicked();
+        void onLogout();
+        void onLogoutSuccess();
     }
 
-    // bắt buộc phải có constructor rỗng
     public ProfileFragment() { }
 
-    // Cho phép HomeActivity truyền GoogleSignInClient vào
     public void setGoogleSignInClient(GoogleSignInClient client) {
         this.googleClient = client;
     }
 
-    // ----------------------------------------------------------------------
     @Override
     public void onAttach(@NonNull Context ctx) {
         super.onAttach(ctx);
@@ -74,78 +65,81 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    // ----------------------------------------------------------------------
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inf, @Nullable ViewGroup parent,
                              @Nullable Bundle savedInstanceState) {
         View v = inf.inflate(R.layout.profile_fragment, parent, false);
 
-        // bind view
-        tvEmail   = v.findViewById(R.id.tvEmail);
-        tvName    = v.findViewById(R.id.tvName);
-        btnAuth   = v.findViewById(R.id.btnLogout);   // nút đã có sẵn trong layout
-        btnManage = v.findViewById(R.id.btnManage);   // bạn vừa thêm trong XML
+        tvEmail = v.findViewById(R.id.tvEmail);
+        tvName = v.findViewById(R.id.tvName);
+        btnAuth = v.findViewById(R.id.btnLogout);
+        btnManage = v.findViewById(R.id.btnManage);
         btnAddRestaurant = v.findViewById(R.id.btnAddRestaurant);
         btnMyRestaurant = v.findViewById(R.id.btnMyRestaurant);
+        btnVerifyRestaurant = v.findViewById(R.id.btnVerifyRestaurant);
+
         mAuth = FirebaseAuth.getInstance();
         updateUI(mAuth.getCurrentUser());
+
         btnAddRestaurant.setOnClickListener(view -> {
-            // Kiểm tra đăng nhập
             if (mAuth.getCurrentUser() == null) {
                 Toast.makeText(getContext(), "Vui lòng đăng nhập để thêm nhà hàng", Toast.LENGTH_SHORT).show();
                 return;
             }
             startActivity(new Intent(getContext(), AddRestaurantActivity.class));
         });
+
         btnMyRestaurant.setOnClickListener(view -> {
-            // Kiểm tra đăng nhập
             if (mAuth.getCurrentUser() == null) {
-                Toast.makeText(getContext(), "Vui lòng đăng nhập để xem My Restaurant", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Vui lòng đăng nhập để xem nhà hàng của tôi", Toast.LENGTH_SHORT).show();
                 return;
             }
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.profileDrawer, new MyRestaurantFragment()) // ID của container trong Activity
+                    .replace(R.id.profileDrawer, new MyRestaurantFragment())
                     .addToBackStack(null)
                     .commit();
-        });                       
-        // “Quản lý” – mặc định ẩn, chỉ hiển thị nếu là admin
+        });
+
         btnManage.setVisibility(View.GONE);
+        btnVerifyRestaurant.setVisibility(View.GONE); // 👈 Mặc định ẩn
+
         btnManage.setOnClickListener(view ->
                 startActivity(new Intent(getContext(), AdminActivity.class)));
+
+        btnVerifyRestaurant.setOnClickListener(view -> {
+            Toast.makeText(getContext(), "Chức năng xác minh nhà hàng sẽ được cập nhật sau!", Toast.LENGTH_SHORT).show();
+            // startActivity(new Intent(getContext(), VerifyRestaurantActivity.class));
+        });
 
         return v;
     }
 
-    // ----------------------------------------------------------------------
     @Override
     public void onResume() {
         super.onResume();
-        checkIfAdminAndShowManage();      // luôn kiểm tra khi fragment hiển thị lại
+        checkIfAdminAndShowManage();
     }
 
-    // ----------------------------------------------------------------------
-    /** Cập nhật giao diện tùy theo trạng thái đăng nhập */
     public void updateUI(FirebaseUser user) {
-        if (user == null) {                                   // CHƯA đăng nhập
+        if (user == null) {
             tvEmail.setText("");
-            tvName .setText("");
+            tvName.setText("");
             btnAuth.setText("Đăng nhập Google");
             btnAuth.setOnClickListener(v -> {
                 if (authCallback != null) authCallback.onAuthButtonClicked();
             });
-            btnManage.setVisibility(View.GONE);               // ẩn nút quản lý
+            btnManage.setVisibility(View.GONE);
+            btnVerifyRestaurant.setVisibility(View.GONE); // 👈 Ẩn nếu chưa đăng nhập
             return;
         }
 
-        // Đã login ----------------------------------------------------------
         tvEmail.setText("Email: " + user.getEmail());
-        tvName .setText("Tên: "   + (user.getDisplayName() == null
-                ? "Không có tên" : user.getDisplayName()));
+        tvName.setText("Tên: " + (user.getDisplayName() == null ? "Không có tên" : user.getDisplayName()));
         btnAuth.setText("Đăng xuất");
         btnAuth.setOnClickListener(v -> {
-            if (authCallback != null) authCallback.onLogout();    // thông báo trước
+            if (authCallback != null) authCallback.onLogout();
             mAuth.signOut();
             if (googleClient != null) {
                 googleClient.revokeAccess().addOnCompleteListener(t -> {
@@ -158,12 +152,9 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-        // Sau khi đã có user → kiểm tra role
         checkIfAdminAndShowManage();
     }
 
-    // ----------------------------------------------------------------------
-    /** Kiểm tra role và show/hide nút “Quản lý” */
     private void checkIfAdminAndShowManage() {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) return;
@@ -178,7 +169,17 @@ public class ProfileFragment extends Fragment {
             String role = snap.getValue(String.class);
             boolean isAdmin = Constants.ROLE_ADMIN.equals(role)
                     || Constants.ROLE_SYSTEM_ADMIN.equals(role);
+
             btnManage.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+            btnVerifyRestaurant.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+
+            if (isAdmin) {
+                btnVerifyRestaurant.setOnClickListener(view -> {
+                    // TODO: Replace with actual logic to open verification screen
+                    startActivity(new Intent(getContext(), AdminActivity.class)
+                            .putExtra("mode", "verify"));
+                });
+            }
         });
     }
 }

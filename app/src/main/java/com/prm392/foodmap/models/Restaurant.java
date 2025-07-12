@@ -13,6 +13,7 @@ public class Restaurant {
     public Map<String, String> images;
     public Map<String, String> menuImages;
     public boolean isVisible;
+    public  boolean isVerified;
     public long createdAt;
     public long updatedAt;
 
@@ -107,6 +108,14 @@ public class Restaurant {
 
     public double getLatitude() {
         return latitude;
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(boolean verified) {
+        isVerified = verified;
     }
 
     public void setLatitude(double latitude) {
