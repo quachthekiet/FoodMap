@@ -32,7 +32,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
 import com.prm392.foodmap.adapters.AdminAdapter;
-import com.prm392.foodmap.adapters.RestaurantAdapter;
 import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
@@ -71,7 +70,13 @@ public class PinActivity extends AppCompatActivity implements OnMapReadyCallback
         checkUserRole();
 
         // Gắn adapter với danh sách được lọc
-        adapter = new AdminAdapter(this, filteredList, R.layout.item_restaurant, this::moveToRestaurantLocation);
+        adapter = new AdminAdapter(
+                this,
+                filteredList,
+                R.layout.item_restaurant,
+                this::moveToRestaurantLocation,
+                this::updateMapMarkers // thêm callback cập nhật map
+        );
         recyclerNearby.setLayoutManager(new LinearLayoutManager(this));
         recyclerNearby.setAdapter(adapter);
     }

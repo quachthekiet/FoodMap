@@ -1,14 +1,11 @@
+// AdminAdapter.java
 package com.prm392.foodmap.adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.RatingBar;
-import android.widget.Switch;
-import android.widget.TextView;
+import android.util.Log;
+import android.view.*;
+import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,17 +24,25 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.VH> {
         void onRestaurantClick(Restaurant restaurant);
     }
 
+    public interface OnVisibilityChangedListener {
+        void onVisibilityChanged();
+    }
+
     private final Context context;
     private List<Restaurant> data;
     private final int layoutResId;
     private final OnRestaurantClickListener clickListener;
+    private final OnVisibilityChangedListener visibilityChangedListener;
 
     public AdminAdapter(Context context, List<Restaurant> data,
-                        int layoutResId, OnRestaurantClickListener clickListener) {
+                        int layoutResId,
+                        OnRestaurantClickListener clickListener,
+                        OnVisibilityChangedListener visibilityChangedListener) {
         this.context = context;
         this.data = data;
         this.layoutResId = layoutResId;
         this.clickListener = clickListener;
+        this.visibilityChangedListener = visibilityChangedListener;
     }
 
     public void setRestaurantList(List<Restaurant> newList) {
@@ -71,6 +76,8 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int pos) {
+        Log.d("ADAPTER_DEBUG", "Using AdminAdapter layout");
+
         Restaurant res = data.get(pos);
 
         h.txtName.setText(res.name);
@@ -87,12 +94,14 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.VH> {
         h.swVisible.setChecked(res.isVisible);
         h.swVisible.setOnCheckedChangeListener((b, checked) -> {
             res.isVisible = checked;
-            FirebaseDatabase.getInstance(
-                            "https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app")
+            FirebaseDatabase.getInstance()
                     .getReference("restaurants")
                     .child(res.getKey())
                     .child("isVisible")
                     .setValue(checked);
+            if (visibilityChangedListener != null) {
+                visibilityChangedListener.onVisibilityChanged();
+            }
         });
 
         h.itemView.setOnClickListener(v -> {
