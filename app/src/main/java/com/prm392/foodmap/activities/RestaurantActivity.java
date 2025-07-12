@@ -5,6 +5,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,6 +16,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -42,12 +45,18 @@ public class RestaurantActivity extends AppCompatActivity {
     private Button btnReview;
     private TextView edtReview;
     private RatingBar ratingBarInput;
+    private ImageButton btnFavorite;
+    private boolean isFavorite = false;
+    private String userId;
+    private FirebaseUser user;
+    private FirebaseAuth mAuth;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_restaurant);
-
+        mAuth = FirebaseAuth.getInstance();
         bindingView();
         bindingAction();
     }
@@ -72,14 +81,89 @@ public class RestaurantActivity extends AppCompatActivity {
         reviewAdapter = new ReviewAdapter(this, reviewList);
         recyclerReviews.setLayoutManager(new LinearLayoutManager(this));
         recyclerReviews.setAdapter(reviewAdapter);
+
+        btnFavorite = findViewById(R.id.btnFavorite);
+
+        user = mAuth.getCurrentUser();
+        if (user != null) {
+            userId = user.getUid();
+        } else {
+            userId = null;
+        }
+
+
     }
 
     private void bindingAction() {
         loadRestaurantDetail();
+        if (userId != null) {
+            checkFavoriteState();
+            btnFavorite.setOnClickListener(v -> toggleFavorite());
+        } else {
+            btnFavorite.setOnClickListener(v -> {
+                Toast.makeText(this, "Vui lòng đăng nhập để sử dụng chức năng yêu thích.", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+
         loadImagesFromFirebase();
         loadReviews();
         btnReview.setOnClickListener(this::onReviewClick);
     }
+
+    private void checkFavoriteState() {
+        DatabaseReference favRef = FirebaseDatabase.getInstance()
+                .getReference("favorites")
+                .child(userId)
+                .child(restaurantId);
+
+        favRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                isFavorite = snapshot.exists();
+                updateFavoriteIcon();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(RestaurantActivity.this, "Lỗi khi kiểm tra yêu thích", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void updateFavoriteIcon() {
+        if (isFavorite) {
+            btnFavorite.setImageResource(R.drawable.ic_heart_filled);
+        } else {
+            btnFavorite.setImageResource(R.drawable.ic_heart_outline);
+        }
+    }
+    private void toggleFavorite() {
+        DatabaseReference favRef = FirebaseDatabase.getInstance()
+                .getReference("favorites")
+                .child(userId)
+                .child(restaurantId);
+
+        if (isFavorite) {
+            // Bỏ yêu thích
+            favRef.removeValue().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    isFavorite = false;
+                    updateFavoriteIcon();
+                    Toast.makeText(this, "Đã bỏ yêu thích", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            // Thêm yêu thích
+            favRef.setValue(true).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    isFavorite = true;
+                    updateFavoriteIcon();
+                    Toast.makeText(this, "Đã thêm vào yêu thích", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+    }
+
 
     private void onReviewClick(View view) {
         int rating = (int) ratingBarInput.getRating();
