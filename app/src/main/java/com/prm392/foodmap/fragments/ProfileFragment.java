@@ -23,6 +23,8 @@ public class ProfileFragment extends Fragment {
     private Button btnAuth;
     private FirebaseAuth mAuth;
 
+    private Button btnLogo;
+
     private OnAuthButtonClickListener authButtonClickListener;
     private GoogleSignInClient mGoogleSignInClient;
 

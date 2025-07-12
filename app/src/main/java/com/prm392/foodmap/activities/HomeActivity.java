@@ -99,6 +99,10 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
             } else if (id == R.id.nav_profile) {
                 openProfileDrawer();
                 return true;
+            }else if(id == R.id.nav_list){
+                Intent intent = new Intent(this, NearbyListActivity.class);
+                startActivity(intent);
+                return true;
             }
             return false;
         });
