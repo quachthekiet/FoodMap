@@ -171,7 +171,7 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
         restaurantData.put("images", images);
         restaurantData.put("menuImages", menuImages);
         restaurantData.put("isVisible", false);
-
+        restaurantData.put("isVerified", false);
         long now = System.currentTimeMillis();
         restaurantData.put("createdAt", now);
         restaurantData.put("updatedAt", now);

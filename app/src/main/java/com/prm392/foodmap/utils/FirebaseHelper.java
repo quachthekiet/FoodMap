@@ -49,7 +49,7 @@ public class FirebaseHelper {
                 List<RestaurantWithKey> list = new ArrayList<>();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     Restaurant r = ds.getValue(Restaurant.class);
-                    if (r != null && r.isVisible()) {
+                    if (r != null && r.isVisible() && r.isVerified()) {
                         list.add(new RestaurantWithKey(ds.getKey(), r));
                     }
                 }

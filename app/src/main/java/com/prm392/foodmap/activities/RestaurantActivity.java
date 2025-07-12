@@ -1,5 +1,6 @@
 package com.prm392.foodmap.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -42,7 +43,7 @@ public class RestaurantActivity extends AppCompatActivity {
     private List<Review> reviewList;
     private ReviewAdapter reviewAdapter;
     private String restaurantId;
-    private Button btnReview;
+    private Button btnReview,btnUpdate;
     private TextView edtReview;
     private RatingBar ratingBarInput;
     private ImageButton btnFavorite;
@@ -83,7 +84,8 @@ public class RestaurantActivity extends AppCompatActivity {
         recyclerReviews.setAdapter(reviewAdapter);
 
         btnFavorite = findViewById(R.id.btnFavorite);
-
+        btnUpdate = findViewById(R.id.detail_btnUpdate);
+        btnUpdate.setVisibility(View.GONE);
         user = mAuth.getCurrentUser();
         if (user != null) {
             userId = user.getUid();
@@ -258,6 +260,18 @@ public class RestaurantActivity extends AppCompatActivity {
                 tvName.setText(name != null ? name : "N/A");
                 tvAddress.setText(address != null ? address : "N/A");
                 tvPhone.setText(phone != null ? phone : "N/A");
+                String ownerUid = snapshot.child("ownerUid").getValue(String.class);
+                if (ownerUid != null && userId != null && ownerUid.equals(userId)) {
+                    btnUpdate.setVisibility(View.VISIBLE);
+                    btnUpdate.setOnClickListener(v -> {
+                        Intent intent = new Intent(RestaurantActivity.this, UpdateRestaurantActivity.class);
+                        intent.putExtra("restaurantKey", restaurantId);
+                        startActivity(intent);
+                    });
+                } else {
+                    btnUpdate.setVisibility(View.GONE);
+                }
+
             }
 
             @Override
