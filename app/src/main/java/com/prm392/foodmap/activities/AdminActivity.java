@@ -14,6 +14,7 @@ import com.google.android.gms.maps.model.*;
 import com.google.firebase.database.*;
 
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.adapters.AdminRestaurantAdapter;
 import com.prm392.foodmap.adapters.RestaurantAdapter;
 import com.prm392.foodmap.models.Restaurant;
 
@@ -24,10 +25,11 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
     private static final String TAG = "AdminActivity";
     private GoogleMap mMap;
     private RecyclerView recyclerView;
-    private RestaurantAdapter restaurantAdapter;
+    private AdminRestaurantAdapter restaurantAdapter;
     private List<Restaurant> restaurantList;
     private DatabaseReference restaurantsRef;
     private Map<String, Marker> markerMap;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +53,7 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
         restaurantList = new ArrayList<>();
         markerMap = new HashMap<>();
 
-        restaurantAdapter = new RestaurantAdapter(
+        restaurantAdapter = new AdminRestaurantAdapter(
                 this,
                 restaurantList,
                 R.layout.item_pin_restaurant_admin,
@@ -67,10 +69,9 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
         loadRestaurants();
     }
 
-    // Xử lý nút ← trên AppBar
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();  // hoạt động giống nút back Android
+        onBackPressed();
         return true;
     }
 

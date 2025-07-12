@@ -59,12 +59,11 @@
             android:textColor="@android:color/white"
             android:background="@drawable/rounded_red_button" />
 
-        <!-- Nút Quản lý (chỉ hiện với admin) -->
         <Button
             android:id="@+id/btnManage"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:text="Quản lý"
+            android:text="Pin Manage"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:background="@drawable/rounded_blue_button"

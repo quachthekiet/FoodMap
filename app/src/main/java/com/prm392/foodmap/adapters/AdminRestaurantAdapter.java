@@ -1,7 +1,6 @@
 package com.prm392.foodmap.adapters;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,51 +15,38 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.google.firebase.database.FirebaseDatabase;
 import com.prm392.foodmap.R;
-import com.prm392.foodmap.activities.RestaurantActivity;
 import com.prm392.foodmap.models.Restaurant;
 
 import java.util.List;
 
-public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.VH> {
-
-    public interface OnRestaurantClickListener {
-        void onRestaurantClick(Restaurant restaurant);
-    }
-
+public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurantAdapter.VH> {
     private final Context context;
     private List<Restaurant> data;
     private final int layoutResId;
-    private final OnRestaurantClickListener clickListener;
+    private final RestaurantAdapter.OnRestaurantClickListener clickListener;
 
-    public RestaurantAdapter(Context ctx,
-                             List<Restaurant> list,
-                             int layoutResId,
-                             OnRestaurantClickListener listener) {
+    public AdminRestaurantAdapter(Context ctx, List<Restaurant> list, int layoutResId,
+                                  RestaurantAdapter.OnRestaurantClickListener listener) {
         this.context = ctx;
         this.data = list;
         this.layoutResId = layoutResId;
         this.clickListener = listener;
     }
 
-    public void setRestaurantList(List<Restaurant> newList) {
-        data = newList;
-        notifyDataSetChanged();
-    }
-
     static class VH extends RecyclerView.ViewHolder {
         ImageView img;
-        TextView  txtName, txtAddress, txtRating;
+        TextView txtName, txtAddress, txtRating;
         RatingBar ratingBar;
-        Switch    swVisible;
+        Switch swVisible;
 
         VH(View item) {
             super(item);
-            img        = item.findViewById(R.id.l_imgRestaurant);
-            txtName    = item.findViewById(R.id.l_txtName);
+            img = item.findViewById(R.id.l_imgRestaurant);
+            txtName = item.findViewById(R.id.l_txtName);
             txtAddress = item.findViewById(R.id.l_txtAddress);
-            ratingBar  = item.findViewById(R.id.l_ratingBar);
-            txtRating  = item.findViewById(R.id.l_txtRatingCount);
-            swVisible  = item.findViewById(R.id.switchVisible);
+            ratingBar = item.findViewById(R.id.l_ratingBar);
+            txtRating = item.findViewById(R.id.l_txtRatingCount);
+            swVisible = item.findViewById(R.id.switchVisible);
         }
     }
 
@@ -80,11 +66,11 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.VH
         h.ratingBar.setRating((float) res.averageRating);
         h.txtRating.setText(String.valueOf(res.reviewCount));
 
-        // hình đầu tiên
         if (res.images != null && !res.images.isEmpty()) {
             String url = res.images.values().iterator().next();
             Glide.with(context).load(url).into(h.img);
         }
+
         if (h.swVisible != null) {
             h.swVisible.setOnCheckedChangeListener(null);
             h.swVisible.setChecked(res.isVisible);
@@ -101,9 +87,7 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.VH
 
         h.itemView.setOnClickListener(v -> {
             if (clickListener != null) clickListener.onRestaurantClick(res);
-            Intent i = new Intent(context, RestaurantActivity.class);
-            i.putExtra("RESTAURANT_ID", res.getKey());
-            context.startActivity(i);
+
         });
     }
 
@@ -111,4 +95,10 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.VH
     public int getItemCount() {
         return data == null ? 0 : data.size();
     }
+
+    public void setRestaurantList(List<Restaurant> newList) {
+        data = newList;
+        notifyDataSetChanged();
+    }
 }
+
