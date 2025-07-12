@@ -7,12 +7,19 @@
     android:padding="12dp"
     >
 
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fragmentContainerView"
+        android:name="com.prm392.foodmap.fragments.MapsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="392dp" />
+
     <TextView
         android:id="@+id/l_txtHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Quán ăn gần bạn"
-        android:textSize="20sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="#212121"
         android:layout_gravity="center_horizontal"
