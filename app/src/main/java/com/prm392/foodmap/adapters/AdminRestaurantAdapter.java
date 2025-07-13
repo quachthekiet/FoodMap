@@ -85,7 +85,11 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
             h.btnVerify.setVisibility(View.GONE);
         } else {
             h.btnVerify.setVisibility(View.VISIBLE);
+
+            // ✅ Xử lý xác minh và xóa khỏi danh sách
             h.btnVerify.setOnClickListener(v -> {
+                int position = h.getBindingAdapterPosition();
+
                 FirebaseDatabase.getInstance()
                         .getReference("restaurants")
                         .child(res.getKey())
@@ -93,8 +97,10 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
                         .setValue(true)
                         .addOnSuccessListener(task -> {
                             Toast.makeText(context, "Đã xác minh " + res.name, Toast.LENGTH_SHORT).show();
-                            res.isVerified = true;
-                            notifyItemChanged(h.getAdapterPosition());
+
+                            // Xoá khỏi danh sách chờ xác minh
+                            data.remove(position);
+                            notifyItemRemoved(position);
                         });
             });
         }
