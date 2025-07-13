@@ -78,9 +78,12 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
                 this::moveCameraTo
         );
 
-        // Mặc định vào “quản lý chung”
-        recycler.setAdapter(viewAdapter);
-        loadAllRestaurants();
+        String mode = getIntent().getStringExtra("mode");
+        if ("verify".equals(mode)) {
+            switchToMode(false);
+        } else {
+            switchToMode(true);
+        }
     }
 
     // AppBar Back
@@ -100,17 +103,17 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.mn_all) {
-            switchToMode(true);  // vào chế độ “tất cả”
+            switchToMode(true);  // Quản lý tất cả
         } else if (item.getItemId() == R.id.mn_verify) {
-            switchToMode(false); // vào chế độ “chờ xác minh”
+            switchToMode(false); // Chờ xác minh
         }
         return super.onOptionsItemSelected(item);
     }
 
-
-    // Firebase: load danh sách
     private void loadAllRestaurants() {
-        resRef.addListenerForSingleValueEvent(buildListener(false));
+        resRef.orderByChild("isVerified")
+                .equalTo(true)  // chỉ load các nhà hàng đã được xác minh
+                .addListenerForSingleValueEvent(buildListener(false));
     }
 
     private void loadUnverifiedRestaurants() {
@@ -120,6 +123,7 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
     private void switchToMode(boolean showVerified) {
+        recycler.setAdapter(null); // Reset tránh lỗi view reuse
         if (showVerified) {
             recycler.setAdapter(viewAdapter);
             loadAllRestaurants();

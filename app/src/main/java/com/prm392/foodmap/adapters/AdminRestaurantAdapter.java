@@ -38,7 +38,7 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
 
     static class VH extends RecyclerView.ViewHolder {
         ImageView img;
-        TextView txtName, txtAddress;
+        TextView txtName, txtAddress, txtRatingCount;
         RatingBar ratingBar;
         Button btnVerify;
 
@@ -48,6 +48,7 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
             txtName = item.findViewById(R.id.l_txtName);
             txtAddress = item.findViewById(R.id.l_txtAddress);
             ratingBar = item.findViewById(R.id.l_ratingBar);
+            txtRatingCount = item.findViewById(R.id.l_txtRatingCount);
             btnVerify = item.findViewById(R.id.btnVerify);
         }
     }
@@ -55,6 +56,7 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        Log.d("ADAPTER", "Inflating layout: " + layoutResId);
         View view = LayoutInflater.from(context).inflate(layoutResId, parent, false);
         return new VH(view);
     }
@@ -67,6 +69,12 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
         h.txtName.setText(res.name);
         h.txtAddress.setText(res.address);
         h.ratingBar.setRating((float) res.averageRating);
+        if (res.reviewCount > 0) {
+            h.txtRatingCount.setText("(" + res.reviewCount + ")");
+            h.txtRatingCount.setVisibility(View.VISIBLE);
+        } else {
+            h.txtRatingCount.setVisibility(View.GONE);
+        }
 
         if (res.images != null && !res.images.isEmpty()) {
             String url = res.images.values().iterator().next();

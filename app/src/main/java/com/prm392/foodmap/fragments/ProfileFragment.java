@@ -36,8 +36,7 @@ public class ProfileFragment extends Fragment {
     private Button btnManage;
     private Button btnMyRestaurant;
     private Button btnAddRestaurant;
-    private Button btnVerifyRestaurant; // 👈 Nút mới
-
+    private Button btnVerifyRestaurant;
     private FirebaseAuth mAuth;
     private GoogleSignInClient googleClient;
 
@@ -131,7 +130,7 @@ public class ProfileFragment extends Fragment {
                 if (authCallback != null) authCallback.onAuthButtonClicked();
             });
             btnManage.setVisibility(View.GONE);
-            btnVerifyRestaurant.setVisibility(View.GONE); // 👈 Ẩn nếu chưa đăng nhập
+            btnVerifyRestaurant.setVisibility(View.GONE);
             return;
         }
 

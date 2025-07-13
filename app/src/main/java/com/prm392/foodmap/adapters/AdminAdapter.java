@@ -11,7 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
 import com.prm392.foodmap.activities.RestaurantActivity;
 import com.prm392.foodmap.models.Restaurant;
@@ -70,6 +73,7 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.VH> {
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        Log.d("ADAPTER", "Inflating layout: " + layoutResId);
         View view = LayoutInflater.from(context).inflate(layoutResId, parent, false);
         return new VH(view);
     }
@@ -83,13 +87,13 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.VH> {
         h.txtName.setText(res.name);
         h.txtAddress.setText(res.address);
         h.ratingBar.setRating((float) res.averageRating);
-        h.txtRating.setText(String.valueOf(res.reviewCount));
+        h.txtRating.setText("(" + res.reviewCount + ")");
 
         if (res.images != null && !res.images.isEmpty()) {
             String url = res.images.values().iterator().next();
             Glide.with(context).load(url).into(h.img);
         }
-
+        loadRating(res, h);
         h.swVisible.setOnCheckedChangeListener(null);
         h.swVisible.setChecked(res.isVisible);
         h.swVisible.setOnCheckedChangeListener((b, checked) -> {
@@ -115,5 +119,42 @@ public class AdminAdapter extends RecyclerView.Adapter<AdminAdapter.VH> {
     @Override
     public int getItemCount() {
         return data == null ? 0 : data.size();
+    }
+
+    private void loadRating(Restaurant res, VH h) {
+        FirebaseDatabase.getInstance()
+                .getReference("reviews")
+                .child(res.getKey())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        int total = 0;
+                        float sum = 0;
+                        for (DataSnapshot snap : snapshot.getChildren()) {
+                            Long ratingVal = snap.child("rating").getValue(Long.class);
+                            if (ratingVal != null) {
+                                sum += ratingVal;
+                                total++;
+                            }
+                        }
+
+                        if (total > 0) {
+                            float avg = sum / total;
+                            res.averageRating = avg;
+                            res.reviewCount = total;
+
+                            h.ratingBar.setRating(avg);
+                            h.txtRating.setText("(" + total + ")");
+                        } else {
+                            h.ratingBar.setRating(0);
+                            h.txtRating.setText("(0)");
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("RATING", "Failed to load ratings: " + error.getMessage());
+                    }
+                });
     }
 }
