@@ -43,7 +43,20 @@
                     android:textColor="#212121"
                     android:textSize="22sp"
                     android:textStyle="bold" />
-
+                <Button
+                    android:id="@+id/detail_btnUpdate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sửa"
+                    android:textSize="12sp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:layout_marginEnd="32dp"
+                    android:backgroundTint="#4CAF50"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"
+                    />
                 <ImageButton
                     android:id="@+id/btnFavorite"
                     android:layout_width="24dp"
@@ -86,6 +99,7 @@
                 android:paddingBottom="8dp"
                 android:textColor="#555555"
                 android:textSize="15sp" />
+
 
         </LinearLayout>
 

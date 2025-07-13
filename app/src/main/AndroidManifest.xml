@@ -17,6 +17,9 @@
         android:theme="@style/Theme.FoodMap"
         tools:targetApi="31">
         <activity
+            android:name=".activities.MyFavoriteListActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.PinActivity"
             android:exported="false" />
         <activity
@@ -64,7 +67,7 @@
 
         <activity
             android:name=".activities.LoginActivity"
-            android:exported="true"></activity>
+            android:exported="true" />
         <activity
             android:name=".activities.RestaurantActivity"
             android:exported="true" />

@@ -79,8 +79,8 @@ public class ProfileFragment extends Fragment {
         btnVerifyRestaurant = v.findViewById(R.id.btnVerifyRestaurant);
 
         mAuth = FirebaseAuth.getInstance();
-        updateUI(mAuth.getCurrentUser());
-
+        btnAddRestaurant.setVisibility(View.GONE);
+        btnMyRestaurant.setVisibility(View.GONE);
         btnAddRestaurant.setOnClickListener(view -> {
             if (mAuth.getCurrentUser() == null) {
                 Toast.makeText(getContext(), "Vui lòng đăng nhập để thêm nhà hàng", Toast.LENGTH_SHORT).show();
@@ -129,6 +129,8 @@ public class ProfileFragment extends Fragment {
             btnAuth.setOnClickListener(v -> {
                 if (authCallback != null) authCallback.onAuthButtonClicked();
             });
+            btnAddRestaurant.setVisibility(View.GONE);
+            btnMyRestaurant.setVisibility(View.GONE);
             btnManage.setVisibility(View.GONE);
             btnVerifyRestaurant.setVisibility(View.GONE);
             return;
@@ -150,7 +152,8 @@ public class ProfileFragment extends Fragment {
                 updateUI(null);
             }
         });
-
+        btnAddRestaurant.setVisibility(View.VISIBLE);
+        btnMyRestaurant.setVisibility(View.VISIBLE);
         checkIfAdminAndShowManage();
     }
 
@@ -180,5 +183,11 @@ public class ProfileFragment extends Fragment {
                 });
             }
         });
+    }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        updateUI(currentUser);
     }
 }

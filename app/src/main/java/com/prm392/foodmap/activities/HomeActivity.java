@@ -101,6 +101,16 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 startActivity(new Intent(this, NearbyListActivity.class));
                 return true;
             }
+            else if (id == R.id.nav_favorites) {
+                FirebaseUser currentUser = mAuth.getCurrentUser();
+                if (currentUser == null) {
+                    Toast.makeText(this, "Vui lòng đăng nhập để xem quán yêu thích", Toast.LENGTH_SHORT).show();
+                    openProfileDrawer();
+                } else {
+                    startActivity(new Intent(this, MyFavoriteListActivity.class));
+                }
+                return true;
+            }
             return false;
         });
 

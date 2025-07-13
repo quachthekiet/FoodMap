@@ -56,7 +56,8 @@
             android:background="#FF9800"
             android:text="Thêm nhà hàng"
             android:textColor="@android:color/white"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/btnMyRestaurant"
@@ -66,7 +67,8 @@
             android:background="#4CAF50"
             android:text="Quán của tôi"
             android:textColor="@android:color/white"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:visibility="gone" />
         <!-- Logout Button (using a standard Button for simplicity) -->
         <Button
             android:id="@+id/btnLogout"
