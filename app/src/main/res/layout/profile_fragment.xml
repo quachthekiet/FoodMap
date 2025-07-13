@@ -7,18 +7,19 @@
     android:padding="24dp">
 
     <LinearLayout
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="66dp"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
 
         <!-- Avatar -->
         <androidx.cardview.widget.CardView
-            android:layout_width="170dp"
-            android:layout_height="170dp"
-            app:cardCornerRadius="85dp"
-            app:cardElevation="4dp"
-            android:layout_marginBottom="24dp">
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="30dp"
+            app:cardElevation="4dp">
 
             <ImageView
                 android:id="@+id/imgAvatar"
@@ -31,74 +32,84 @@
         <!-- Tên người dùng -->
         <TextView
             android:id="@+id/tvName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Tên Người Dùng"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#212121"
-            android:layout_marginBottom="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_marginBottom="4dp"
+            android:visibility="gone" />
 
         <!-- Email -->
         <TextView
             android:id="@+id/tvEmail"
-            android:text="email@example.com"
-            android:textSize="16sp"
-            android:textColor="#757575"
-            android:layout_marginBottom="32dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="email@example.com"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
+
+        <!-- Thêm nhà hàng -->
         <Button
             android:id="@+id/btnAddRestaurant"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:background="#FF9800"
             android:text="Thêm nhà hàng"
             android:textColor="@android:color/white"
             android:textSize="16sp"
+            android:background="#FF9800"
+            android:layout_marginTop="12dp"
             android:visibility="gone" />
 
+        <!-- Quán của tôi -->
         <Button
             android:id="@+id/btnMyRestaurant"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:background="#4CAF50"
             android:text="Quán của tôi"
             android:textColor="@android:color/white"
             android:textSize="16sp"
+            android:background="#4CAF50"
+            android:layout_marginTop="12dp"
             android:visibility="gone" />
-        <!-- Logout Button (using a standard Button for simplicity) -->
-        <Button
-            android:id="@+id/btnLogout"
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:text="Đăng xuất"
-            android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:background="@drawable/rounded_red_button" />
 
+        <!-- Quản lý Pin -->
         <Button
             android:id="@+id/btnManage"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:text="Quản lý Pin"
-            android:textSize="16sp"
             android:textColor="@android:color/white"
+            android:textSize="16sp"
             android:background="@drawable/rounded_blue_button"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:visibility="gone" />
 
+        <!-- Verify Pin -->
         <Button
             android:id="@+id/btnVerifyRestaurant"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:text="Verify Pin"
-            android:textSize="16sp"
             android:textColor="@android:color/white"
+            android:textSize="16sp"
             android:background="@drawable/rounded_pink_button"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:visibility="gone" />
+
+        <!-- Logout -->
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="Đăng xuất"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:background="@drawable/rounded_red_button"
+            android:layout_marginTop="12dp"/>
+
     </LinearLayout>
 </ScrollView>
