@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -43,6 +44,7 @@ public class MyRestaurantFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
+    private LinearLayout layoutEmpty;
     private RecyclerView rvRestaurants;
     private MyRestaurantAdapter adapter;
     private final List<RestaurantWithKey> restaurantList = new ArrayList<>();
@@ -83,6 +85,7 @@ public class MyRestaurantFragment extends Fragment {
     private void bindingView(View view) {
         rvRestaurants = view.findViewById(R.id.myRes_rvRestaurants);
         rvRestaurants.setLayoutManager(new LinearLayoutManager(getContext()));
+        layoutEmpty = view.findViewById(R.id.myRes_layoutEmpty);
     }
 
     private void bindingAction() {
@@ -107,6 +110,14 @@ public class MyRestaurantFragment extends Fragment {
                 restaurantList.clear();
                 restaurantList.addAll(restaurants);
                 adapter.notifyDataSetChanged();
+                if (restaurants.isEmpty()) {
+                    rvRestaurants.setVisibility(View.GONE);
+                    layoutEmpty.setVisibility(View.VISIBLE);
+                } else {
+                    rvRestaurants.setVisibility(View.VISIBLE);
+                    layoutEmpty.setVisibility(View.GONE);
+                }
+
             }
 
             @Override

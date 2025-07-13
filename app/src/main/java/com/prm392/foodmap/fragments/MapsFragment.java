@@ -47,6 +47,7 @@ import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -313,6 +314,41 @@ public class MapsFragment extends Fragment {
             } else {
                 Toast.makeText(getContext(), "Bạn cần cấp quyền vị trí để sử dụng chức năng này", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+    public void showFavoriteMarkers(List<Restaurant> restaurants) {
+        if (googleMap == null) return;
+        googleMap.clear(); // Xoá marker cũ (nếu có)
+        markerMap.clear();
+
+        for (Restaurant restaurant : restaurants) {
+            if (restaurant != null) {
+                LatLng latLng = new LatLng(restaurant.latitude, restaurant.longitude);
+                Marker marker = googleMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(restaurant.name));
+                if (marker != null) {
+                    marker.setTag(restaurant.getKey());
+                    markerMap.put(restaurant.getKey(), marker);
+                }
+            }
+        }
+
+        // Gắn lại sự kiện click marker
+        googleMap.setOnMarkerClickListener(marker -> {
+            String resId = (String) marker.getTag();
+            if (resId != null) {
+                Intent intent = new Intent(getContext(), RestaurantActivity.class);
+                intent.putExtra("RESTAURANT_ID", resId);
+                startActivity(intent);
+            }
+            return false;
+        });
+
+        // Di chuyển camera đến nhà hàng đầu tiên
+        if (!restaurants.isEmpty()) {
+            Restaurant first = restaurants.get(0);
+            moveCamera(new LatLng(first.latitude, first.longitude), 14f);
         }
     }
 }

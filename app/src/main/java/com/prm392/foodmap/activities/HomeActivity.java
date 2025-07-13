@@ -101,6 +101,10 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 startActivity(new Intent(this, NearbyListActivity.class));
                 return true;
             }
+            else if (id == R.id.nav_favorites) {
+                startActivity(new Intent(this, MyFavoriteListActivity.class));
+                return true;
+            }
             return false;
         });
 
