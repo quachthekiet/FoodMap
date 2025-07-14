@@ -282,27 +282,56 @@ public class RestaurantActivity extends AppCompatActivity {
     }
 
     private void loadImagesFromFirebase() {
-        DatabaseReference imagesRef = FirebaseDatabase.getInstance()
+        DatabaseReference restaurantRef = FirebaseDatabase.getInstance()
                 .getReference("restaurants")
-                .child(restaurantId)
-                .child("images");
+                .child(restaurantId);
 
-        imagesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        // Clear the existing imageUrls list
+        imageUrls.clear();
+
+        // Fetch images from the 'images' node
+        restaurantRef.child("images").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                imageUrls.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     String url = child.getValue(String.class);
                     if (url != null) {
                         imageUrls.add(url);
                     }
                 }
-                imageSliderAdapter.notifyDataSetChanged();
+                // Notify adapter after both images and menuImages are fetched
+                fetchMenuImages();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(RestaurantActivity.this, "Failed to load images", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void fetchMenuImages() {
+        DatabaseReference restaurantRef = FirebaseDatabase.getInstance()
+                .getReference("restaurants")
+                .child(restaurantId);
+
+        // Fetch images from the 'menuImages' node
+        restaurantRef.child("menuImages").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    String url = child.getValue(String.class);
+                    if (url != null) {
+                        imageUrls.add(url);
+                    }
+                }
+                // Notify adapter after all images are fetched
+                imageSliderAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(RestaurantActivity.this, "Failed to load menu images", Toast.LENGTH_SHORT).show();
             }
         });
     }
