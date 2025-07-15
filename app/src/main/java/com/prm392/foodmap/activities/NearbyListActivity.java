@@ -121,7 +121,7 @@ public class NearbyListActivity extends AppCompatActivity {
 
                     for (DataSnapshot child : snapshot.getChildren()) {
                         Restaurant res = child.getValue(Restaurant.class);
-                        if (res != null && res.isVisible) {
+                        if (res != null && res.isVisible && res.isVerified) {
                             res.setKey(child.getKey());
                             totalRestaurants++;
 

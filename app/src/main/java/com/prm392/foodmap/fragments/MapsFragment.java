@@ -131,7 +131,7 @@ public class MapsFragment extends Fragment {
                     Log.d("kiet.debug", "Name: " + restaurant.name + ", Lat: " + restaurant.latitude + ", Lng: " + restaurant.longitude);
 
 
-                    if (restaurant != null && restaurant.isVisible) {
+                    if (restaurant != null && restaurant.isVisible && restaurant.isVerified) {
                         restaurant.setKey(resSnap.getKey()); // Lưu id
 
                         LatLng position = new LatLng(restaurant.latitude, restaurant.longitude);
