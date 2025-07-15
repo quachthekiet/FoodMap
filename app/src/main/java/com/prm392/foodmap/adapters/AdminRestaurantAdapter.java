@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.prm392.foodmap.R;
 import com.prm392.foodmap.models.Restaurant;
@@ -85,22 +86,18 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
             h.btnVerify.setVisibility(View.GONE);
         } else {
             h.btnVerify.setVisibility(View.VISIBLE);
-
-            // ✅ Xử lý xác minh và xóa khỏi danh sách
             h.btnVerify.setOnClickListener(v -> {
-                int position = h.getBindingAdapterPosition();
-
-                FirebaseDatabase.getInstance()
-                        .getReference("restaurants")
-                        .child(res.getKey())
-                        .child("isVerified")
-                        .setValue(true)
+                DatabaseReference resRef = FirebaseDatabase.getInstance().getReference("restaurants");
+                resRef.child(res.getKey()).child("isVerified").setValue(true)
                         .addOnSuccessListener(task -> {
-                            Toast.makeText(context, "Đã xác minh " + res.name, Toast.LENGTH_SHORT).show();
-
-                            // Xoá khỏi danh sách chờ xác minh
-                            data.remove(position);
-                            notifyItemRemoved(position);
+                            resRef.child(res.getKey()).child("isVisible").setValue(true)
+                                    .addOnSuccessListener(visibleTask -> {
+                                        Toast.makeText(context, "Đã xác minh và hiển thị: " + res.name, Toast.LENGTH_SHORT).show();
+                                        res.isVerified = true;
+                                        res.isVisible = true;
+                                        data.remove(pos);
+                                        notifyItemRemoved(pos);
+                                    });
                         });
             });
         }
