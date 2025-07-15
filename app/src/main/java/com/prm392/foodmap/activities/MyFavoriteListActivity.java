@@ -82,7 +82,7 @@ public class MyFavoriteListActivity extends AppCompatActivity {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot resSnap) {
                             Restaurant res = resSnap.getValue(Restaurant.class);
-                            if (res != null && res.isVisible) {
+                            if (res != null && res.isVisible && res.isVerified()) {
                                 res.setKey(resSnap.getKey());
                                 favoriteRestaurants.add(res);
                                 adapter.notifyDataSetChanged();

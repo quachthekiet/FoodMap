@@ -55,12 +55,14 @@ public class MyRestaurantAdapter extends RecyclerView.Adapter<MyRestaurantAdapte
         if (!r.isVerified()) {
             holder.tvStatus.setText("Chờ duyệt");
             holder.tvStatus.setTextColor(ContextCompat.getColor(context, android.R.color.holo_orange_dark));
-        } else if (r.isVisible()) {
-            holder.tvStatus.setText("Đang hoạt động");
-            holder.tvStatus.setTextColor(ContextCompat.getColor(context, android.R.color.holo_green_dark));
         } else {
-            holder.tvStatus.setText("Ngừng hoạt động");
-            holder.tvStatus.setTextColor(ContextCompat.getColor(context, android.R.color.holo_red_dark));
+            if (r.isVisible()) {
+                holder.tvStatus.setText("Đang hoạt động");
+                holder.tvStatus.setTextColor(ContextCompat.getColor(context, android.R.color.holo_green_dark));
+            } else {
+                holder.tvStatus.setText("Ngừng hoạt động");
+                holder.tvStatus.setTextColor(ContextCompat.getColor(context, android.R.color.holo_red_dark));
+            }
         }
         if (r.getImages() != null && !r.getImages().isEmpty()) {
             String firstImageUrl = r.getImages().values().iterator().next();

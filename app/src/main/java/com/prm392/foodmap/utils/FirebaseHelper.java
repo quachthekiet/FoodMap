@@ -145,8 +145,6 @@ public class FirebaseHelper {
                 if (snapshot.exists()) {
                     Restaurant restaurant = snapshot.getValue(Restaurant.class);
                     if (restaurant != null) {
-                        // Tùy chọn: Gán key vào đối tượng Restaurant nếu bạn có trường transient key trong model
-                        // restaurant.setKey(key);
                         if (callback != null) {
                             callback.onSuccess(restaurant);
                         }

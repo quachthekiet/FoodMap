@@ -287,6 +287,8 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
         currentRestaurant.longitude = selectedLatLng.longitude;
         currentRestaurant.images = imagesMap;
         currentRestaurant.menuImages = menuImagesMap;
+        currentRestaurant.isVerified = false;
+        currentRestaurant.isVisible = false;
         currentRestaurant.updateTimestamp();
 
         FirebaseHelper.updateRestaurant(restaurantKey, currentRestaurant,  new DataCallback<Void>() {

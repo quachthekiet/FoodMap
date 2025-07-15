@@ -1,5 +1,7 @@
 package com.prm392.foodmap.models;
 
+import com.google.firebase.database.Exclude;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,6 +74,7 @@ public class Restaurant {
     public void updateTimestamp() {
         this.updatedAt = System.currentTimeMillis();
     }
+    @Exclude
     public boolean isVisible(){
         return isVisible;
     }
@@ -111,11 +114,10 @@ public class Restaurant {
     public double getLatitude() {
         return latitude;
     }
-
+    @Exclude
     public boolean isVerified() {
         return isVerified;
     }
-
     public void setVerified(boolean verified) {
         isVerified = verified;
     }
