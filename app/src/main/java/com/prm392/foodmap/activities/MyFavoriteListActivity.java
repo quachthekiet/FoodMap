@@ -27,6 +27,7 @@ import com.prm392.foodmap.models.Restaurant;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MyFavoriteListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -76,6 +77,9 @@ public class MyFavoriteListActivity extends AppCompatActivity {
                     layoutEmpty.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
                 }
+                List<Restaurant> tempList = new ArrayList<>();
+                AtomicInteger counter = new AtomicInteger(0);
+                int totalFavorites = (int) snapshot.getChildrenCount();
                 for (DataSnapshot favSnap : snapshot.getChildren()) {
                     String resId = favSnap.getKey();
                     restaurantsRef.child(resId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -84,7 +88,11 @@ public class MyFavoriteListActivity extends AppCompatActivity {
                             Restaurant res = resSnap.getValue(Restaurant.class);
                             if (res != null && res.isVisible && res.isVerified()) {
                                 res.setKey(resSnap.getKey());
-                                favoriteRestaurants.add(res);
+                                tempList.add(res);
+                            }
+                            if (counter.incrementAndGet() == totalFavorites) {
+                                favoriteRestaurants.clear();
+                                favoriteRestaurants.addAll(tempList);
                                 adapter.notifyDataSetChanged();
                             }
                         }

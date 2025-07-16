@@ -34,8 +34,9 @@ public class MyFavoriteAdapter extends RecyclerView.Adapter<MyFavoriteAdapter.Fa
         void onRestaurantClick(Restaurant res);
     }
 
-    private OnRestaurantClickListener listener;
-    public MyFavoriteAdapter(Context context, List<Restaurant> favoriteList, String userId,OnRestaurantClickListener listener) {
+    private final OnRestaurantClickListener listener;
+
+    public MyFavoriteAdapter(Context context, List<Restaurant> favoriteList, String userId, OnRestaurantClickListener listener) {
         this.context = context;
         this.favoriteList = favoriteList;
         this.userId = userId;
@@ -52,10 +53,11 @@ public class MyFavoriteAdapter extends RecyclerView.Adapter<MyFavoriteAdapter.Fa
     @Override
     public void onBindViewHolder(@NonNull FavViewHolder holder, int position) {
         Restaurant res = favoriteList.get(position);
+
         holder.txtName.setText(res.name);
         holder.txtAddress.setText(res.address);
         holder.txtRating.setText(String.format("%d", res.reviewCount));
-        holder.ratingBar.setRating((float) res.averageRating);
+        holder.ratingBar.setRating(res.averageRating);
 
         if (res.images != null && !res.images.isEmpty()) {
             String url = res.images.values().iterator().next();
@@ -75,23 +77,34 @@ public class MyFavoriteAdapter extends RecyclerView.Adapter<MyFavoriteAdapter.Fa
             new AlertDialog.Builder(context)
                     .setTitle("Bỏ yêu thích?")
                     .setMessage("Bạn có chắc muốn xóa nhà hàng này khỏi danh sách yêu thích?")
-                    .setPositiveButton("Có", (dialog, which) -> removeFavorite(res, position))
+                    .setPositiveButton("Có", (dialog, which) -> {
+                        holder.btnFavorite.setEnabled(false);
+                        removeFavorite(holder.getBindingAdapterPosition(), res, holder.btnFavorite);
+                    })
                     .setNegativeButton("Không", null)
                     .show();
         });
     }
 
-    private void removeFavorite(Restaurant res, int position) {
+    private void removeFavorite(int position, Restaurant res, ImageButton btn) {
+        if (position == RecyclerView.NO_POSITION) return;
+
         DatabaseReference favRef = FirebaseDatabase.getInstance()
                 .getReference("favorites")
                 .child(userId)
                 .child(res.getKey());
 
         favRef.removeValue().addOnCompleteListener(task -> {
+            btn.setEnabled(true);
+
             if (task.isSuccessful()) {
-                favoriteList.remove(position);
-                notifyItemRemoved(position);
+                if (position < favoriteList.size()) {
+                    favoriteList.remove(position);
+                    notifyItemRemoved(position);
+                }
                 Toast.makeText(context, "Đã bỏ yêu thích", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "Lỗi khi bỏ yêu thích", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -118,4 +131,5 @@ public class MyFavoriteAdapter extends RecyclerView.Adapter<MyFavoriteAdapter.Fa
         }
     }
 }
+
 
