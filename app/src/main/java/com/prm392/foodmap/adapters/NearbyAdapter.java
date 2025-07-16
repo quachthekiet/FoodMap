@@ -65,9 +65,9 @@ public class NearbyAdapter extends RecyclerView.Adapter<NearbyAdapter.NearbyRest
             if (listener != null) {
                 listener.onClick(res);
             }
-            Intent intent = new Intent(context, RestaurantActivity.class);
-            intent.putExtra("RESTAURANT_ID", res.getKey());
-            context.startActivity(intent);
+//            Intent intent = new Intent(context, RestaurantActivity.class);
+//            intent.putExtra("RESTAURANT_ID", res.getKey());
+//            context.startActivity(intent);
         });
     }
 
