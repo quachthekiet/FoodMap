@@ -44,7 +44,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
     private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
     private static final int RC_SIGN_IN = 1001;
 
-    private EditText edtSearch;
     private DrawerLayout drawerLayout;
     private BottomNavigationView bottomNavigationView;
 
@@ -84,9 +83,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 .beginTransaction()
                 .replace(R.id.h_fragmentContainerView, new MapsFragment())
                 .commit();
-
-        edtSearch.setFocusable(false);
-        edtSearch.setOnClickListener(v -> openAutocompleteActivity());
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -130,15 +126,7 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
     protected void onActivityResult(int req, int res, @Nullable Intent data) {
         super.onActivityResult(req, res, data);
 
-        if (req == AUTOCOMPLETE_REQUEST_CODE) {
-            if (res == RESULT_OK && data != null) {
-                Place p = Autocomplete.getPlaceFromIntent(data);
-                edtSearch.setText(p.getName());
-            } else if (res == AutocompleteActivity.RESULT_ERROR) {
-                Toast.makeText(this, "Lỗi tìm kiếm", Toast.LENGTH_SHORT).show();
-            }
-            return;
-        }
+
 
         if (req == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
@@ -207,7 +195,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
 
     // region UI
     private void bindViews() {
-        edtSearch = findViewById(R.id.h_edtSearch);
         drawerLayout = findViewById(R.id.drawerLayout);
         bottomNavigationView = findViewById(R.id.h_bottomNavigationView);
     }
