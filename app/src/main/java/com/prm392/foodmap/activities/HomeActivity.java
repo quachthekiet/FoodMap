@@ -41,7 +41,6 @@ import java.util.Map;
 public class HomeActivity extends AppCompatActivity implements ProfileFragment.OnAuthButtonClickListener {
 
     private static final String TAG = "HomeActivity";
-    private static final int AUTOCOMPLETE_REQUEST_CODE = 1;
     private static final int RC_SIGN_IN = 1001;
 
     private DrawerLayout drawerLayout;
@@ -204,16 +203,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 .replace(R.id.h_fragmentContainerView, f)
                 .commit();
     }
-
-    private void openAutocompleteActivity() {
-        List<Place.Field> fields = Arrays.asList(
-                Place.Field.ID, Place.Field.NAME,
-                Place.Field.ADDRESS, Place.Field.LAT_LNG);
-        startActivityForResult(
-                new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields).build(this),
-                AUTOCOMPLETE_REQUEST_CODE);
-    }
-
     private void openProfileDrawer() {
         ProfileFragment pf = new ProfileFragment();
         pf.setGoogleSignInClient(googleSignInClient);
