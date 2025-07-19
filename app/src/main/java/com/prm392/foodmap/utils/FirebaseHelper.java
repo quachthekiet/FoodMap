@@ -1,7 +1,11 @@
 package com.prm392.foodmap.utils;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -168,5 +172,47 @@ public class FirebaseHelper {
             }
         });
     }
+
+    public static void checkInToRestaurant(String restaurantId) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("checkins")
+                .child(userId)
+                .child(restaurantId);
+
+        ref.setValue(true)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("CheckIn", "Check-in thành công!");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("CheckIn", "Lỗi check-in: " + e.getMessage());
+                });
+    }
+
+    public static void checkInUser(String restaurantId, DataCallback<Boolean> callback) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null) {
+            callback.onError("Người dùng chưa đăng nhập");
+            return;
+        }
+
+        String userId = user.getUid();
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("checkins")
+                .child(userId)
+                .child(restaurantId);
+
+        // Ghi giá trị true (đã check-in)
+        ref.setValue(true).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                callback.onSuccess(true);
+            } else {
+                callback.onError("Lỗi khi check-in: " + task.getException().getMessage());
+            }
+        });
+    }
+
 
 }

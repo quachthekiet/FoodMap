@@ -112,12 +112,13 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
         String name = etName.getText().toString().trim();
         String phone = etPhone.getText().toString().trim();
 
-        boolean valid = ValidationHelper.isValidForm(
+        boolean valid = ValidationHelper.isValidAddForm(
                 name,
                 phone,
                 selectedLatLng != null ? selectedLatLng.latitude : null,
-                selectedLatLng != null ? selectedLatLng.longitude : null
-        ) && !imageUrls.isEmpty();
+                selectedLatLng != null ? selectedLatLng.longitude : null,
+                imageUrls
+        );
 
         btnSubmit.setEnabled(valid);
     }
@@ -301,7 +302,7 @@ public class AddRestaurantActivity extends AppCompatActivity implements OnMapRea
     }
 
     @Override
-    public void onImageRemove(int position) {
+    public void onImageRemove(int position,boolean isMenuImage) {
         if (position >= 0 && position < imageUrls.size()) {
             imageUrls.remove(position);
             imageGalleryAdapter.notifyItemRemoved(position);

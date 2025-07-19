@@ -23,7 +23,7 @@ public class MenuImageAdapter extends RecyclerView.Adapter<MenuImageAdapter.Menu
     private final OnImageRemoveListener removeListener;
 
     public interface OnImageRemoveListener {
-        void onImageRemove(int position);
+        void onImageRemove(int position,boolean isMenuImage);
     }
 
     public MenuImageAdapter(List<String> imageUrls, OnImageRemoveListener listener) {
@@ -46,7 +46,7 @@ public class MenuImageAdapter extends RecyclerView.Adapter<MenuImageAdapter.Menu
 
         holder.btnRemove.setOnClickListener(v -> {
             if (removeListener != null) {
-                removeListener.onImageRemove(position);
+                removeListener.onImageRemove(position,true);
             }
         });
 

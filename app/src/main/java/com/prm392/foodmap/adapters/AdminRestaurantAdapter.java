@@ -2,6 +2,8 @@
 package com.prm392.foodmap.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
@@ -9,13 +11,25 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.bumptech.glide.Glide;
+import com.cloudinary.android.MediaManager;
+import com.cloudinary.android.callback.ErrorInfo;
+import com.cloudinary.android.callback.UploadCallback;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.zxing.WriterException;
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.interfaces.DataCallback;
 import com.prm392.foodmap.models.Restaurant;
+import com.prm392.foodmap.utils.QRCodeHelper;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurantAdapter.VH> {
 
@@ -95,6 +109,9 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
                                         Toast.makeText(context, "Đã xác minh và hiển thị: " + res.name, Toast.LENGTH_SHORT).show();
                                         res.isVerified = true;
                                         res.isVisible = true;
+                                        new Handler(Looper.getMainLooper()).post(() -> {
+                                            QRCodeHelper.uploadQRCodeIfNeeded(context, res);
+                                        });
                                         data.remove(pos);
                                         notifyItemRemoved(pos);
                                     });

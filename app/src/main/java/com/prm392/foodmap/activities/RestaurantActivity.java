@@ -1,18 +1,25 @@
 package com.prm392.foodmap.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
@@ -27,7 +34,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.prm392.foodmap.R;
 import com.prm392.foodmap.adapters.ImageSliderAdapter;
 import com.prm392.foodmap.adapters.ReviewAdapter;
+import com.prm392.foodmap.interfaces.DataCallback;
 import com.prm392.foodmap.models.Review;
+import com.prm392.foodmap.utils.FirebaseHelper;
+import com.prm392.foodmap.utils.LocationHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,15 +53,59 @@ public class RestaurantActivity extends AppCompatActivity {
     private List<Review> reviewList;
     private ReviewAdapter reviewAdapter;
     private String restaurantId;
-    private Button btnReview,btnUpdate;
+    private Button btnReview,btnUpdate, btnCheckIn;
     private TextView edtReview;
     private RatingBar ratingBarInput;
     private ImageButton btnFavorite;
+
+    private LinearLayout layoutRatingForm;
     private boolean isFavorite = false;
     private String userId;
+
+    private double restaurantLat;
+
+    private double restaurantLng;
     private FirebaseUser user;
     private FirebaseAuth mAuth;
 
+    private SharedPreferences sharedPreferences;
+    private static final String PREF_NAME = "CHECKIN_PREFS";
+
+    private static final int REQUEST_CODE_QR = 999;
+
+    private static final int REQUEST_CAMERA_PERMISSION = 1001;
+
+    private void openQRScanner() {
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
+            Toast.makeText(this, "Thiết bị không có camera để quét mã QR", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION);
+        } else {
+            startQRScanner();
+        }
+    }
+
+    private void startQRScanner() {
+        Intent intent = new Intent(this, QRScanActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_QR);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_QR && resultCode == RESULT_OK && data != null) {
+            String scannedId = data.getStringExtra("restaurantId");
+            checkInWithQRIfValid(scannedId);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,14 +140,24 @@ public class RestaurantActivity extends AppCompatActivity {
         btnFavorite = findViewById(R.id.btnFavorite);
         btnUpdate = findViewById(R.id.detail_btnUpdate);
         btnUpdate.setVisibility(View.GONE);
+        btnCheckIn = findViewById(R.id.btnCheckIn);
+        layoutRatingForm = findViewById(R.id.layoutRatingForm);
+        sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+
         user = mAuth.getCurrentUser();
         if (user != null) {
             userId = user.getUid();
+            String key = getCheckInKey(userId, restaurantId);
+            boolean isCheckedIn = sharedPreferences.getBoolean(key, false);
+            if (isCheckedIn) {
+                showRatingForm();
+            } else {
+                checkCheckInOnFirebase(userId, restaurantId);
+            }
         } else {
             userId = null;
+            showCheckInPrompt();
         }
-
-
     }
 
     private void bindingAction() {
@@ -106,8 +170,13 @@ public class RestaurantActivity extends AppCompatActivity {
                 Toast.makeText(this, "Vui lòng đăng nhập để sử dụng chức năng yêu thích.", Toast.LENGTH_SHORT).show();
             });
         }
-
-
+        btnCheckIn.setOnClickListener(v -> {
+            if (userId == null) {
+                Toast.makeText(this, "Vui lòng đăng nhập để check-in và đánh giá!", Toast.LENGTH_SHORT).show();
+            } else {
+                openQRScanner();
+            }
+        });
         loadImagesFromFirebase();
         loadReviews();
         btnReview.setOnClickListener(this::onReviewClick);
@@ -261,6 +330,8 @@ public class RestaurantActivity extends AppCompatActivity {
                 tvAddress.setText(address != null ? address : "N/A");
                 tvPhone.setText(phone != null ? phone : "N/A");
                 String ownerUid = snapshot.child("ownerUid").getValue(String.class);
+                restaurantLat = snapshot.child("latitude").getValue(Double.class);
+                restaurantLng = snapshot.child("longitude").getValue(Double.class);
                 if (ownerUid != null && userId != null && ownerUid.equals(userId)) {
                     btnUpdate.setVisibility(View.VISIBLE);
                     btnUpdate.setOnClickListener(v -> {
@@ -362,6 +433,90 @@ public class RestaurantActivity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(RestaurantActivity.this, "Failed to load reviews", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void showCheckInPrompt() {
+        layoutRatingForm.setVisibility(View.GONE);
+        btnCheckIn.setVisibility(View.VISIBLE);
+    }
+
+    private void showRatingForm() {
+        layoutRatingForm.setVisibility(View.VISIBLE);
+        btnCheckIn.setVisibility(View.GONE);
+    }
+    private void checkInWithQR(String restaurantId) {
+        FirebaseHelper.checkInUser(restaurantId, new DataCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+                if (result) {
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    if (user != null) {
+                        String key = getCheckInKey(userId, restaurantId);
+                        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+                        prefs.edit().putBoolean(key, true).apply();
+                    }
+
+                    Toast.makeText(RestaurantActivity.this, "Check-in thành công!", Toast.LENGTH_SHORT).show();
+                    showRatingForm();
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(RestaurantActivity.this, "Check-in thất bại: " + errorMessage, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    private void checkCheckInOnFirebase(String userId, String restaurantId) {
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("checkins")
+                .child(userId)
+                .child(restaurantId);
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Boolean isCheckedInRemote = snapshot.getValue(Boolean.class);
+
+                if (Boolean.TRUE.equals(isCheckedInRemote)) {
+                    String key = getCheckInKey(userId, restaurantId);
+                    sharedPreferences.edit().putBoolean(key, true).apply();
+                    showRatingForm();
+                } else {
+                    showCheckInPrompt();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("CHECKIN", "Firebase check failed: " + error.getMessage());
+                showCheckInPrompt();
+            }
+        });
+    }
+    private String getCheckInKey(String userId, String restaurantId) {
+        return "checkin_" + userId + "_" + restaurantId;
+    }
+    private void checkInWithQRIfValid(String scannedId) {
+        if (scannedId == null || !scannedId.equals(restaurantId)) {
+            Toast.makeText(this, "Sai mã QR. Vui lòng quét đúng mã của quán này!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LocationHelper.checkGPSDistance(this, restaurantLat, restaurantLng, new DataCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean isNearby) {
+                if (isNearby) {
+                    checkInWithQR(restaurantId);
+                } else {
+                    Toast.makeText(RestaurantActivity.this, "Bạn chưa ở gần nhà hàng. Đến gần hơn để check-in!", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Toast.makeText(RestaurantActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
             }
         });
     }

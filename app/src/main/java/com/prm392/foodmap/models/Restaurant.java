@@ -27,6 +27,8 @@ public class Restaurant {
     // Transient field - không lưu vào Firebase
     public transient String key;
 
+    public String qrCodeUrl;
+
     // Constructor không tham số - BẮT BUỘC cho Firebase
     public Restaurant() {
         images = new HashMap<>();
@@ -168,5 +170,13 @@ public class Restaurant {
 
     public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getQrCodeUrl() {
+        return qrCodeUrl;
+    }
+
+    public void setQrCodeUrl(String qrCodeUrl) {
+        this.qrCodeUrl = qrCodeUrl;
     }
 }

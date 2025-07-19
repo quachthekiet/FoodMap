@@ -111,6 +111,11 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
     }
 
     private void onUpdateClicked(View v) {
+
+        if (!hasDataChanged()) {
+            Toast.makeText(this, "Không có thay đổi nào để cập nhật", Toast.LENGTH_SHORT).show();
+            return;
+        }
         updateRestaurant();
     }
 
@@ -248,11 +253,11 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
     }
 
     @Override
-    public void onImageRemove(int position) {
-        if (pickingMenuImage && position < menuImageUrls.size()) {
+    public void onImageRemove(int position, boolean isMenuImage) {
+        if (isMenuImage && position < menuImageUrls.size()) {
             menuImageUrls.remove(position);
             menuImageAdapter.notifyItemRemoved(position);
-        } else if (!pickingMenuImage && position < imageUrls.size()) {
+        } else if (!isMenuImage && position < imageUrls.size()) {
             imageUrls.remove(position);
             imageGalleryAdapter.notifyItemRemoved(position);
         }
@@ -263,9 +268,10 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
         String address = etAddress.getText().toString().trim();
         String phone = etPhone.getText().toString().trim();
 
-        if (!ValidationHelper.isValidForm(name, phone,
+        if (!ValidationHelper.isValidUpdateForm(name, phone,
                 selectedLatLng != null ? selectedLatLng.latitude : null,
-                selectedLatLng != null ? selectedLatLng.longitude : null)) {
+                selectedLatLng != null ? selectedLatLng.longitude : null,
+                imageUrls, menuImageUrls)) {
             Toast.makeText(this, "Vui lòng nhập đầy đủ và đúng thông tin", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -320,5 +326,32 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
             LatLng defaultLocation = new LatLng(21.0278, 105.8342); // Hà Nội
             mapPreview.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, 12));
         }
+    }
+    private boolean hasDataChanged() {
+        String name = etName.getText().toString().trim();
+        String address = etAddress.getText().toString().trim();
+        String phone = etPhone.getText().toString().trim();
+
+        if (!name.equals(currentRestaurant.name)) return true;
+        if (!address.equals(currentRestaurant.address)) return true;
+        if (!phone.equals(currentRestaurant.phone)) return true;
+
+        if (selectedLatLng == null ||
+                currentRestaurant.latitude != selectedLatLng.latitude ||
+                currentRestaurant.longitude != selectedLatLng.longitude) return true;
+
+        // So sánh images
+        if (currentRestaurant.images == null || currentRestaurant.images.size() != imageUrls.size()) return true;
+        for (int i = 0; i < imageUrls.size(); i++) {
+            if (!imageUrls.get(i).equals(currentRestaurant.images.get("img" + i))) return true;
+        }
+
+        // So sánh menu images
+        if (currentRestaurant.menuImages == null || currentRestaurant.menuImages.size() != menuImageUrls.size()) return true;
+        for (int i = 0; i < menuImageUrls.size(); i++) {
+            if (!menuImageUrls.get(i).equals(currentRestaurant.menuImages.get("menu" + i))) return true;
+        }
+
+        return false;
     }
 }

@@ -1,6 +1,7 @@
 package com.prm392.foodmap.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.prm392.foodmap.R;
+import com.prm392.foodmap.activities.ImagePreviewActivity;
 import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.models.RestaurantWithKey;
 import com.prm392.foodmap.utils.ImageHelper;
@@ -65,10 +67,17 @@ public class MyRestaurantAdapter extends RecyclerView.Adapter<MyRestaurantAdapte
             }
         }
         if (r.getImages() != null && !r.getImages().isEmpty()) {
-            String firstImageUrl = r.getImages().values().iterator().next();
+            /*String firstImageUrl = r.getImages().values().iterator().next();*/
+            String firstImageUrl = r.getQrCodeUrl();
             ImageHelper.loadImage(holder.ivThumbnail.getContext(), firstImageUrl, holder.ivThumbnail);
+            holder.ivThumbnail.setOnClickListener(v -> {
+                Intent intent = new Intent(context, ImagePreviewActivity.class);
+                intent.putExtra("image_url", firstImageUrl);
+                context.startActivity(intent);
+            });
         } else {
             holder.ivThumbnail.setImageResource(R.drawable.logo);
+            holder.ivThumbnail.setOnClickListener(null);
         }
 
         holder.btnUpdate.setOnClickListener(v -> {
