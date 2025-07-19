@@ -108,87 +108,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
         }
     }
 
-
-    private void loadAllRestaurants() {
-        LatLng latLng = LocationUtil.getSavedLocation(this);
-        if (latLng != null) {
-            currentUserLocation = new Location("custom");
-            currentUserLocation.setLatitude(latLng.latitude);
-            currentUserLocation.setLongitude(latLng.longitude);
-        }
-
-        DatabaseReference resRef = FirebaseDatabase
-                .getInstance("https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app")
-                .getReference("restaurants");
-        DatabaseReference reviewRef = FirebaseDatabase.getInstance()
-                .getReference("reviews");
-
-        resRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot snapshot) {
-                allRestaurants.clear();
-
-                final int[] total = {0};
-                int[] loaded = {0};
-
-                for (DataSnapshot snap : snapshot.getChildren()) {
-                    Restaurant res = snap.getValue(Restaurant.class);
-                    if (res == null || !res.isVisible() || !res.isVerified()) continue;
-                    res.setKey(snap.getKey());
-                    total[0]++;
-
-                    reviewRef.child(res.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override public void onDataChange(@NonNull DataSnapshot reviewSnap) {
-                            float totalRating = 0;
-                            int count = 0;
-                            for (DataSnapshot review : reviewSnap.getChildren()) {
-                                Long r = review.child("rating").getValue(Long.class);
-                                if (r != null) {
-                                    totalRating += r;
-                                    count++;
-                                }
-                            }
-
-                            res.averageRating = (count > 0) ? totalRating / count : 0;
-                            res.reviewCount = count;
-
-                            if (currentUserLocation != null) {
-                                Location resLoc = new Location("firebase");
-                                resLoc.setLatitude(res.latitude);
-                                resLoc.setLongitude(res.longitude);
-                                res.distance = currentUserLocation.distanceTo(resLoc) / 1000.0f; // km
-                            } else {
-                                res.distance = Float.MAX_VALUE; // không có vị trí
-                            }
-
-                            allRestaurants.add(res);
-                            loaded[0]++;
-
-                            if (loaded[0] == total[0]) {
-                                sortAndShowSuggestions("");
-                            }
-                        }
-
-                        @Override public void onCancelled(@NonNull DatabaseError error) {
-                            loaded[0]++;
-                            if (loaded[0] == total[0]) {
-                                sortAndShowSuggestions("");
-                            }
-                        }
-                    });
-                }
-
-                if (total[0] == 0) {
-                    suggestionAdapter.setRestaurantList(new ArrayList<>());
-                }
-            }
-
-            @Override public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(HomeActivity.this, "Lỗi tải danh sách quán", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-
     private void bindViews() {
         drawerLayout = findViewById(R.id.drawerLayout);
         bottomNavigationView = findViewById(R.id.h_bottomNavigationView);
@@ -392,7 +311,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 loadMainFragment();
-                loadAllRestaurants();
                 closeProfileDrawer();
                 return true;
             } else if (id == R.id.nav_profile) {
