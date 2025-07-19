@@ -68,9 +68,9 @@ public class MyFavoriteAdapter extends RecyclerView.Adapter<MyFavoriteAdapter.Fa
 
         holder.itemView.setOnClickListener(v -> {
             listener.onRestaurantClick(res);
-            Intent intent = new Intent(context, RestaurantActivity.class);
-            intent.putExtra("RESTAURANT_ID", res.getKey());
-            context.startActivity(intent);
+//            Intent intent = new Intent(context, RestaurantActivity.class);
+//            intent.putExtra("RESTAURANT_ID", res.getKey());
+//            context.startActivity(intent);
         });
 
         holder.btnFavorite.setOnClickListener(v -> {

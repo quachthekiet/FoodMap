@@ -108,7 +108,7 @@ public class MyFavoriteListActivity extends AppCompatActivity {
                         userId,
                         restaurant -> {
                             if (mapsFragment != null) {
-                                mapsFragment.moveCamera(new LatLng(restaurant.latitude, restaurant.longitude), 16f);
+                                mapsFragment.moveCamera(restaurant.getKey());
                             }
                         }
                 );
