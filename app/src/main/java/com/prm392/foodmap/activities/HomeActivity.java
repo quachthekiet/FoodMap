@@ -73,6 +73,10 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
 
     private List<Restaurant> allRestaurants = new ArrayList<>();
 
+    private final android.os.Handler searchHandler = new android.os.Handler();
+    private Runnable searchRunnable;
+
+
     private void moveMapToRestaurant(Restaurant restaurant) {
         if (mapsFragment != null) {
             mapsFragment.moveCamera(restaurant.getKey());
@@ -206,48 +210,149 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String query = s.toString().trim().toLowerCase();
-                if (query.isEmpty() || !edtSearch.hasFocus()) {
-                    suggestionList.setVisibility(View.GONE);
-                    return;
+                // Hủy runnable cũ nếu có
+                if (searchRunnable != null) {
+                    searchHandler.removeCallbacks(searchRunnable);
                 }
 
-                List<Restaurant> filtered = new ArrayList<>();
-                for (Restaurant r : allRestaurants) {
-                    if (r.name != null && r.name.toLowerCase().contains(query)) {
-                        filtered.add(r);
+                final String query = s.toString().trim();
+
+                // Delay 300ms trước khi thực thi
+                searchRunnable = () -> {
+                    if (edtSearch.hasFocus()) {
+                        loadRestaurantsWithQuery(query);
+                    } else {
+                        suggestionList.setVisibility(View.GONE);
                     }
-                }
+                };
 
-                if (filtered.isEmpty()) {
-                    suggestionList.setVisibility(View.GONE);
-                } else {
-                    suggestionAdapter.setRestaurantList(filtered);
-                    suggestionList.setVisibility(View.VISIBLE);
-                }
+                searchHandler.postDelayed(searchRunnable, 300);
             }
 
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-
+            @Override public void afterTextChanged(Editable s) {}
         });
+
+
+
 
         edtSearch.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
                 // Gọi filter ngay khi EditText được focus, với nội dung hiện tại
                 String currentQuery = edtSearch.getText().toString();
+                if(currentQuery.isEmpty()) return;
                 sortAndShowSuggestions(currentQuery);
             } else {
                 suggestionList.setVisibility(View.GONE);
             }
         });
 
-
-
     }
+
+    private void loadRestaurantsWithQuery(String query) {
+        if (query.trim().isEmpty()) {
+            suggestionAdapter.setRestaurantList(new ArrayList<>());
+            suggestionList.setVisibility(View.GONE);
+            return;
+        }
+        LatLng latLng = LocationUtil.getSavedLocation(this);
+        if (latLng != null) {
+            currentUserLocation = new Location("custom");
+            currentUserLocation.setLatitude(latLng.latitude);
+            currentUserLocation.setLongitude(latLng.longitude);
+        }
+
+        DatabaseReference resRef = FirebaseDatabase
+                .getInstance("https://food-map-app-2025-default-rtdb.asia-southeast1.firebasedatabase.app")
+                .getReference("restaurants");
+        DatabaseReference reviewRef = FirebaseDatabase.getInstance().getReference("reviews");
+
+        resRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                List<Restaurant> filteredRestaurants = new ArrayList<>();
+
+                final int[] total = {0};
+                int[] loaded = {0};
+
+                for (DataSnapshot snap : snapshot.getChildren()) {
+                    Restaurant res = snap.getValue(Restaurant.class);
+                    if (res == null || !res.isVisible() || !res.isVerified()) continue;
+                    res.setKey(snap.getKey());
+                    total[0]++;
+
+                    reviewRef.child(res.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot reviewSnap) {
+                            float totalRating = 0;
+                            int count = 0;
+                            for (DataSnapshot review : reviewSnap.getChildren()) {
+                                Long r = review.child("rating").getValue(Long.class);
+                                if (r != null) {
+                                    totalRating += r;
+                                    count++;
+                                }
+                            }
+
+                            res.averageRating = (count > 0) ? totalRating / count : 0;
+                            res.reviewCount = count;
+
+                            if (currentUserLocation != null) {
+                                Location resLoc = new Location("firebase");
+                                resLoc.setLatitude(res.latitude);
+                                resLoc.setLongitude(res.longitude);
+                                res.distance = currentUserLocation.distanceTo(resLoc) / 1000.0f; // km
+                            } else {
+                                res.distance = Float.MAX_VALUE;
+                            }
+
+                            // Lọc theo query
+                            if (res.name != null && res.name.toLowerCase().contains(query.toLowerCase())) {
+                                filteredRestaurants.add(res);
+                            }
+
+                            loaded[0]++;
+                            if (loaded[0] == total[0]) {
+                                filteredRestaurants.sort((r1, r2) -> {
+                                    int cmp = Float.compare(r1.distance, r2.distance);
+                                    if (cmp == 0) {
+                                        return Float.compare(r2.averageRating, r1.averageRating);
+                                    }
+                                    return cmp;
+                                });
+
+                                if (filteredRestaurants.isEmpty()) {
+                                    suggestionList.setVisibility(View.GONE);
+                                } else {
+                                    suggestionAdapter.setRestaurantList(filteredRestaurants);
+                                    suggestionList.setVisibility(View.VISIBLE);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            loaded[0]++;
+                            if (loaded[0] == total[0]) {
+                                suggestionAdapter.setRestaurantList(filteredRestaurants);
+                                suggestionList.setVisibility(View.VISIBLE);
+                            }
+                        }
+                    });
+                }
+
+                if (total[0] == 0) {
+                    suggestionAdapter.setRestaurantList(new ArrayList<>());
+                    suggestionList.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(HomeActivity.this, "Lỗi tải dữ liệu", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
 
     @Override
@@ -263,16 +368,16 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
         });
 
         bindViews();
-
         bindActions();
 
-        loadAllRestaurants();
+
         mAuth = FirebaseAuth.getInstance();
 
         if (!Places.isInitialized()) {
             Places.initialize(getApplicationContext(), getString(R.string.api_key));
         }
         loadMainFragment();
+
         googleSignInClient = GoogleSignIn.getClient(
                 this,
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -287,6 +392,7 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
             int id = item.getItemId();
             if (id == R.id.nav_home) {
                 loadMainFragment();
+                loadAllRestaurants();
                 closeProfileDrawer();
                 return true;
             } else if (id == R.id.nav_profile) {
