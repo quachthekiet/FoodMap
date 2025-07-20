@@ -44,7 +44,7 @@ public class LocationHelper {
                         resLat, resLng, result
                 );
                 float distance = result[0];
-                callback.onSuccess(distance <= 100);
+                callback.onSuccess(distance <= 50);
             } else {
                 callback.onError("Không thể lấy vị trí hiện tại!");
             }
