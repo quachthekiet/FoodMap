@@ -45,11 +45,13 @@ import com.prm392.foodmap.models.Constants;
 import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class HomeActivity extends AppCompatActivity implements ProfileFragment.OnAuthButtonClickListener {
 
@@ -76,19 +78,31 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
     private final android.os.Handler searchHandler = new android.os.Handler();
     private Runnable searchRunnable;
 
-
     private void moveMapToRestaurant(Restaurant restaurant) {
         if (mapsFragment != null) {
             mapsFragment.moveCamera(restaurant.getKey());
         }
     }
 
+    private static String removeVietnameseDiacritics(String str) {
+        if (str == null)
+            return "";
+        String temp = Normalizer.normalize(str, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(temp).replaceAll("").replaceAll("đ", "d").replaceAll("Đ", "D");
+    }
 
     private void sortAndShowSuggestions(String query) {
+        String normalizedQuery = removeVietnameseDiacritics(query.toLowerCase());
         List<Restaurant> filtered = new ArrayList<>();
         for (Restaurant r : allRestaurants) {
-            if (query.isEmpty() || (r.name != null && r.name.toLowerCase().contains(query.toLowerCase()))) {
+            if (query.isEmpty()) {
                 filtered.add(r);
+            } else if (r.name != null) {
+                String normalizedName = removeVietnameseDiacritics(r.name.toLowerCase());
+                if (normalizedName.contains(normalizedQuery)) {
+                    filtered.add(r);
+                }
             }
         }
 
@@ -123,9 +137,11 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
         suggestionList.setAdapter(suggestionAdapter);
     }
 
-    private void bindActions(){
+    private void bindActions() {
         edtSearch.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -148,18 +164,17 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 searchHandler.postDelayed(searchRunnable, 300);
             }
 
-            @Override public void afterTextChanged(Editable s) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
         });
-
-
-
 
         edtSearch.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus) {
-                // Gọi filter ngay khi EditText được focus, với nội dung hiện tại
                 String currentQuery = edtSearch.getText().toString();
-                if(currentQuery.isEmpty()) return;
-                sortAndShowSuggestions(currentQuery);
+                if (!currentQuery.isEmpty()) {
+                    loadRestaurantsWithQuery(currentQuery);
+                }
             } else {
                 suggestionList.setVisibility(View.GONE);
             }
@@ -185,17 +200,20 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 .getReference("restaurants");
         DatabaseReference reviewRef = FirebaseDatabase.getInstance().getReference("reviews");
 
+        String normalizedQuery = removeVietnameseDiacritics(query.toLowerCase());
+
         resRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 List<Restaurant> filteredRestaurants = new ArrayList<>();
 
-                final int[] total = {0};
-                int[] loaded = {0};
+                final int[] total = { 0 };
+                int[] loaded = { 0 };
 
                 for (DataSnapshot snap : snapshot.getChildren()) {
                     Restaurant res = snap.getValue(Restaurant.class);
-                    if (res == null || !res.isVisible() || !res.isVerified()) continue;
+                    if (res == null || !res.isVisible() || !res.isVerified())
+                        continue;
                     res.setKey(snap.getKey());
                     total[0]++;
 
@@ -224,9 +242,12 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                                 res.distance = Float.MAX_VALUE;
                             }
 
-                            // Lọc theo query
-                            if (res.name != null && res.name.toLowerCase().contains(query.toLowerCase())) {
-                                filteredRestaurants.add(res);
+                            // Lọc theo query không dấu
+                            if (res.name != null) {
+                                String normalizedName = removeVietnameseDiacritics(res.name.toLowerCase());
+                                if (normalizedName.contains(normalizedQuery)) {
+                                    filteredRestaurants.add(res);
+                                }
                             }
 
                             loaded[0]++;
@@ -272,8 +293,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
         });
     }
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -289,7 +308,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
         bindViews();
         bindActions();
 
-
         mAuth = FirebaseAuth.getInstance();
 
         if (!Places.isInitialized()) {
@@ -302,10 +320,7 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                         .requestIdToken(getString(R.string.default_web_client_id))
                         .requestEmail()
-                        .build()
-        );
-
-
+                        .build());
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -319,8 +334,7 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
             } else if (id == R.id.nav_list) {
                 startActivity(new Intent(this, NearbyListActivity.class));
                 return true;
-            }
-            else if (id == R.id.nav_favorites) {
+            } else if (id == R.id.nav_favorites) {
                 FirebaseUser currentUser = mAuth.getCurrentUser();
                 if (currentUser == null) {
                     Toast.makeText(this, "Vui lòng đăng nhập để xem quán yêu thích", Toast.LENGTH_SHORT).show();
@@ -349,8 +363,6 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
     protected void onActivityResult(int req, int res, @Nullable Intent data) {
         super.onActivityResult(req, res, data);
 
-
-
         if (req == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
@@ -370,7 +382,8 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 return;
             }
             FirebaseUser user = mAuth.getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
             saveUserIfFirstLoginThenRedirect(user);
         });
     }
@@ -383,7 +396,8 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 .getReference("users").child(user.getUid());
 
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot snap) {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snap) {
                 if (!snap.exists()) {
                     Map<String, Object> data = new HashMap<>();
                     data.put("email", user.getEmail());
@@ -395,7 +409,8 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 checkUserRoleAndRedirect(user); // chỉ gọi sau đăng nhập
             }
 
-            @Override public void onCancelled(@NonNull DatabaseError e) {
+            @Override
+            public void onCancelled(@NonNull DatabaseError e) {
                 Toast.makeText(HomeActivity.this, "Lỗi DB", Toast.LENGTH_SHORT).show();
             }
         });
@@ -425,6 +440,7 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 .commit();
         mapsFragment = newMaps;
     }
+
     private void openProfileDrawer() {
         ProfileFragment pf = new ProfileFragment();
         pf.setGoogleSignInClient(googleSignInClient);
@@ -442,11 +458,23 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
     private void updateProfileUI(FirebaseUser user) {
         ProfileFragment pf = (ProfileFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.profileDrawer);
-        if (pf != null) pf.updateUI(user);
+        if (pf != null)
+            pf.updateUI(user);
         closeProfileDrawer();
     }
 
-    @Override public void onAuthButtonClicked() { startGoogleSignIn(); }
-    @Override public void onLogout()            { closeProfileDrawer(); }
-    @Override public void onLogoutSuccess()     { Toast.makeText(this, "Đăng xuất thành công", Toast.LENGTH_SHORT).show(); }
+    @Override
+    public void onAuthButtonClicked() {
+        startGoogleSignIn();
+    }
+
+    @Override
+    public void onLogout() {
+        closeProfileDrawer();
+    }
+
+    @Override
+    public void onLogoutSuccess() {
+        Toast.makeText(this, "Đăng xuất thành công", Toast.LENGTH_SHORT).show();
+    }
 }
