@@ -45,11 +45,13 @@ import com.prm392.foodmap.models.Constants;
 import com.prm392.foodmap.models.Restaurant;
 import com.prm392.foodmap.utils.LocationUtil;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class HomeActivity extends AppCompatActivity implements ProfileFragment.OnAuthButtonClickListener {
 
@@ -82,11 +84,25 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
         }
     }
 
+    private static String removeVietnameseDiacritics(String str) {
+        if (str == null)
+            return "";
+        String temp = Normalizer.normalize(str, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(temp).replaceAll("").replaceAll("đ", "d").replaceAll("Đ", "D");
+    }
+
     private void sortAndShowSuggestions(String query) {
+        String normalizedQuery = removeVietnameseDiacritics(query.toLowerCase());
         List<Restaurant> filtered = new ArrayList<>();
         for (Restaurant r : allRestaurants) {
-            if (query.isEmpty() || (r.name != null && r.name.toLowerCase().contains(query.toLowerCase()))) {
+            if (query.isEmpty()) {
                 filtered.add(r);
+            } else if (r.name != null) {
+                String normalizedName = removeVietnameseDiacritics(r.name.toLowerCase());
+                if (normalizedName.contains(normalizedQuery)) {
+                    filtered.add(r);
+                }
             }
         }
 
@@ -184,6 +200,8 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                 .getReference("restaurants");
         DatabaseReference reviewRef = FirebaseDatabase.getInstance().getReference("reviews");
 
+        String normalizedQuery = removeVietnameseDiacritics(query.toLowerCase());
+
         resRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -224,9 +242,12 @@ public class HomeActivity extends AppCompatActivity implements ProfileFragment.O
                                 res.distance = Float.MAX_VALUE;
                             }
 
-                            // Lọc theo query
-                            if (res.name != null && res.name.toLowerCase().contains(query.toLowerCase())) {
-                                filteredRestaurants.add(res);
+                            // Lọc theo query không dấu
+                            if (res.name != null) {
+                                String normalizedName = removeVietnameseDiacritics(res.name.toLowerCase());
+                                if (normalizedName.contains(normalizedQuery)) {
+                                    filteredRestaurants.add(res);
+                                }
                             }
 
                             loaded[0]++;
