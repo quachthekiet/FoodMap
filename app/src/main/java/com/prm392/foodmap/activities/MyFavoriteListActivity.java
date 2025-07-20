@@ -36,7 +36,7 @@ public class MyFavoriteListActivity extends AppCompatActivity {
     private String userId;
 
     private MapsFragment mapsFragment;
-    private DatabaseReference favoritesRef, restaurantsRef;
+    private DatabaseReference favoritesRef, restaurantsRef, reviewsRef;
     private LinearLayout layoutEmpty;
     public void bindingView(){
         recyclerView = findViewById(R.id.recyclerFavorites);
@@ -45,6 +45,7 @@ public class MyFavoriteListActivity extends AppCompatActivity {
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         favoritesRef = FirebaseDatabase.getInstance().getReference("favorites").child(userId);
         restaurantsRef = FirebaseDatabase.getInstance().getReference("restaurants");
+        reviewsRef = FirebaseDatabase.getInstance().getReference("reviews");
         mapsFragment = (MapsFragment) getSupportFragmentManager().findFragmentById(R.id.favoriteMapFragment);
         layoutEmpty = findViewById(R.id.myf_layoutEmpty);
     }
@@ -88,17 +89,63 @@ public class MyFavoriteListActivity extends AppCompatActivity {
                             Restaurant res = resSnap.getValue(Restaurant.class);
                             if (res != null && res.isVisible && res.isVerified()) {
                                 res.setKey(resSnap.getKey());
-                                tempList.add(res);
+                                
+                                // Tính toán averageRating và reviewCount từ reviews
+                                reviewsRef.child(res.getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot reviewSnap) {
+                                        float totalRating = 0;
+                                        int count = 0;
+
+                                        for (DataSnapshot review : reviewSnap.getChildren()) {
+                                            Long rating = review.child("rating").getValue(Long.class);
+                                            if (rating != null) {
+                                                totalRating += rating;
+                                                count++;
+                                            }
+                                        }
+
+                                        res.averageRating = (count > 0) ? totalRating / count : 0;
+                                        res.reviewCount = count;
+                                        
+                                        tempList.add(res);
+                                        
+                                        if (counter.incrementAndGet() == totalFavorites) {
+                                            favoriteRestaurants.clear();
+                                            favoriteRestaurants.addAll(tempList);
+                                            adapter.notifyDataSetChanged();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+                                        // Vẫn thêm restaurant ngay cả khi không load được reviews
+                                        tempList.add(res);
+                                        
+                                        if (counter.incrementAndGet() == totalFavorites) {
+                                            favoriteRestaurants.clear();
+                                            favoriteRestaurants.addAll(tempList);
+                                            adapter.notifyDataSetChanged();
+                                        }
+                                    }
+                                });
+                            } else {
+                                if (counter.incrementAndGet() == totalFavorites) {
+                                    favoriteRestaurants.clear();
+                                    favoriteRestaurants.addAll(tempList);
+                                    adapter.notifyDataSetChanged();
+                                }
                             }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
                             if (counter.incrementAndGet() == totalFavorites) {
                                 favoriteRestaurants.clear();
                                 favoriteRestaurants.addAll(tempList);
                                 adapter.notifyDataSetChanged();
                             }
                         }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {}
                     });
                 }
 
