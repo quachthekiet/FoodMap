@@ -51,6 +51,12 @@
             android:name=".activities.QRScanActivity"
             android:exported="true" />
         <activity
+            android:name=".activities.AutoOrientationCaptureActivity"
+            android:screenOrientation="fullSensor"
+            android:stateNotNeeded="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+
+        <activity
             android:name=".activities.AdminActivity"
             android:exported="true" />
         <activity

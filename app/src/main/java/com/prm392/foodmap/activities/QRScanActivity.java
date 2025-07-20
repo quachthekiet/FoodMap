@@ -27,7 +27,6 @@ public class QRScanActivity extends AppCompatActivity {
     }
 
     private void bindingView() {
-        // Không có layout nên không cần setContentView, chỉ xử lý permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
@@ -41,7 +40,6 @@ public class QRScanActivity extends AppCompatActivity {
     }
 
     private void bindingAction() {
-        // Tạm thời không có logic tương tác UI, toàn bộ xử lý nằm ở startQRScanner và onActivityResult
     }
 
     private void startQRScanner() {
@@ -51,6 +49,7 @@ public class QRScanActivity extends AppCompatActivity {
         integrator.setBeepEnabled(true);
         integrator.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE);
         integrator.setCameraId(0);
+        integrator.setCaptureActivity(AutoOrientationCaptureActivity.class);
         integrator.initiateScan();
     }
 
@@ -67,7 +66,6 @@ public class QRScanActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    // Xử lý khi user chọn "Cho phép" hoặc "Từ chối" quyền CAMERA
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {

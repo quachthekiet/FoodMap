@@ -78,12 +78,11 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
 
     @Override
     public void onBindViewHolder(@NonNull VH h, int pos) {
-        Log.d("ADAPTER_DEBUG", "Using AdminAdapter layout");
-
         Restaurant res = data.get(pos);
         h.txtName.setText(res.name);
         h.txtAddress.setText(res.address);
         h.ratingBar.setRating((float) res.averageRating);
+
         if (res.reviewCount > 0) {
             h.txtRatingCount.setText("(" + res.reviewCount + ")");
             h.txtRatingCount.setVisibility(View.VISIBLE);
@@ -100,22 +99,39 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
             h.btnVerify.setVisibility(View.GONE);
         } else {
             h.btnVerify.setVisibility(View.VISIBLE);
+            h.btnVerify.setEnabled(true);
+
             h.btnVerify.setOnClickListener(v -> {
+                int adapterPosition = h.getBindingAdapterPosition();
+                if (adapterPosition == RecyclerView.NO_POSITION) return;
+
+                h.btnVerify.setEnabled(false);
+
                 DatabaseReference resRef = FirebaseDatabase.getInstance().getReference("restaurants");
+
                 resRef.child(res.getKey()).child("isVerified").setValue(true)
                         .addOnSuccessListener(task -> {
                             resRef.child(res.getKey()).child("isVisible").setValue(true)
                                     .addOnSuccessListener(visibleTask -> {
-                                        Toast.makeText(context, "Đã xác minh và hiển thị: " + res.name, Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(context, "Đã xác minh: " + res.name, Toast.LENGTH_SHORT).show();
+
                                         res.isVerified = true;
                                         res.isVisible = true;
+
                                         new Handler(Looper.getMainLooper()).post(() -> {
                                             QRCodeHelper.uploadQRCodeIfNeeded(context, res);
                                         });
-                                        data.remove(pos);
-                                        notifyItemRemoved(pos);
-                                    });
-                        });
+
+                                        if (adapterPosition >= 0 && adapterPosition < data.size()) {
+                                            data.remove(adapterPosition);
+                                            notifyItemRemoved(adapterPosition);
+                                        } else {
+                                            notifyDataSetChanged();
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> h.btnVerify.setEnabled(true));
+                        })
+                        .addOnFailureListener(e -> h.btnVerify.setEnabled(true));
             });
         }
 
@@ -123,6 +139,7 @@ public class AdminRestaurantAdapter extends RecyclerView.Adapter<AdminRestaurant
             if (clickListener != null) clickListener.onRestaurantClick(res);
         });
     }
+
 
     @Override
     public int getItemCount() {

@@ -163,11 +163,17 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
                 }
 
                 imageUrls.clear();
-                if (restaurant.images != null) imageUrls.addAll(restaurant.images.values());
+                if (restaurant.images != null)  for (int i = 0; i < restaurant.images.size(); i++) {
+                    String url = restaurant.images.get("img" + i);
+                    if (url != null) imageUrls.add(url);
+                };
                 imageGalleryAdapter.notifyDataSetChanged();
 
                 menuImageUrls.clear();
-                if (restaurant.menuImages != null) menuImageUrls.addAll(restaurant.menuImages.values());
+                if (restaurant.menuImages != null)  for (int i = 0; i < restaurant.menuImages.size(); i++) {
+                    String url = restaurant.menuImages.get("menu" + i);
+                    if (url != null) menuImageUrls.add(url);
+                };
                 menuImageAdapter.notifyDataSetChanged();
             }
 
@@ -336,22 +342,29 @@ public class UpdateRestaurantActivity extends AppCompatActivity implements OnMap
         if (!address.equals(currentRestaurant.address)) return true;
         if (!phone.equals(currentRestaurant.phone)) return true;
 
-        if (selectedLatLng == null ||
-                currentRestaurant.latitude != selectedLatLng.latitude ||
-                currentRestaurant.longitude != selectedLatLng.longitude) return true;
+        if (selectedLatLng == null) return true;
 
-        // So sánh images
-        if (currentRestaurant.images == null || currentRestaurant.images.size() != imageUrls.size()) return true;
-        for (int i = 0; i < imageUrls.size(); i++) {
-            if (!imageUrls.get(i).equals(currentRestaurant.images.get("img" + i))) return true;
-        }
+        if (!isDoubleEqual(currentRestaurant.latitude, selectedLatLng.latitude)) return true;
+        if (!isDoubleEqual(currentRestaurant.longitude, selectedLatLng.longitude)) return true;
 
-        // So sánh menu images
-        if (currentRestaurant.menuImages == null || currentRestaurant.menuImages.size() != menuImageUrls.size()) return true;
-        for (int i = 0; i < menuImageUrls.size(); i++) {
-            if (!menuImageUrls.get(i).equals(currentRestaurant.menuImages.get("menu" + i))) return true;
-        }
+        if (!isListEqual(imageUrls, currentRestaurant.images, "img")) return true;
+        if (!isListEqual(menuImageUrls, currentRestaurant.menuImages, "menu")) return true;
 
         return false;
+    }
+
+    private boolean isDoubleEqual(double a, double b) {
+        return Math.abs(a - b) < 0.00001;
+    }
+
+    private boolean isListEqual(List<String> list, Map<String, String> map, String prefix) {
+        if (map == null || map.size() != list.size()) return false;
+        for (int i = 0; i < list.size(); i++) {
+            String expectedUrl = map.get(prefix + i);
+            if (expectedUrl == null || !expectedUrl.equals(list.get(i))) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -25,6 +25,7 @@ import java.util.*;
 public class AdminActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final String TAG = "AdminActivity";
+    private boolean isLoading = false;
 
     // Map -------------------------------------------------------------
     private GoogleMap mMap;
@@ -123,7 +124,11 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
     private void switchToMode(boolean showVerified) {
-        recycler.setAdapter(null); // Reset tránh lỗi view reuse
+        if (isLoading) return;
+
+        isLoading = true;
+        recycler.setAdapter(null);
+
         if (showVerified) {
             recycler.setAdapter(viewAdapter);
             loadAllRestaurants();
@@ -133,11 +138,13 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
         }
     }
 
+
     private ValueEventListener buildListener(boolean onlyUnverified) {
         return new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 clearMap();
+
                 if (onlyUnverified) {
                     listUnverified.clear();
                     for (DataSnapshot child : snapshot.getChildren()) {
@@ -159,12 +166,16 @@ public class AdminActivity extends AppCompatActivity implements OnMapReadyCallba
                     }
                     viewAdapter.notifyDataSetChanged();
                 }
+
+                isLoading = false;
                 Log.d(TAG, "Loaded: " + snapshot.getChildrenCount());
             }
+
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(AdminActivity.this, "Lỗi tải: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                isLoading = false;
             }
         };
     }
